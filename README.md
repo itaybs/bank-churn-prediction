@@ -1,6 +1,6 @@
 # Bank Customer Churn Prediction
 
-**Predicting which bank customers will leave, using five machine-learning models, rigorous cross-validation, hyperparameter tuning and an interactive analytics dashboard.**
+**Predicting which bank customers will leave, using five machine-learning models, rigorous cross-validation, hyperparameter tuning, an interactive analytics dashboard, and a retention mini-game that turns model scores into money decisions.**
 
 ![Python](https://img.shields.io/badge/Python-tested%20on%203.14-3776AB?logo=python&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-Pipeline%20%7C%20GridSearchCV-F7931E?logo=scikitlearn&logoColor=white)
@@ -16,7 +16,7 @@
 
 1. [Executive summary](#1-executive-summary)
 2. [Quick start](#2-quick-start)
-3. [Dashboard tour](#3-dashboard-tour)
+3. [Dashboard tour](#3-dashboard-tour) · [🏦 The Bank Manager Retention Challenge](#the-bank-manager-retention-challenge-mini-game)
 4. [Results](#4-results)
 5. [Methodology and theory](#5-methodology-and-theory)
 6. [Architecture](#6-architecture)
@@ -50,7 +50,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 python main.py                 # full workflow -> outputs/ (~8-10 min, mostly GridSearchCV)
-python -m pytest               # 79 automated tests (~8 min including the dashboard tests)
+python -m pytest               # 87 automated tests (~8 min including the dashboard tests)
 streamlit run app.py --server.address=localhost --server.port=8501
 ```
 
@@ -66,7 +66,7 @@ Then open **http://localhost:8501/**. The same address and port are set in `.str
 
 ## 3. Dashboard tour
 
-An English Streamlit dashboard (`app.py`) with nine sections. **Every metric column, control and KPI has a hover tooltip**, every section has a *Key terms* panel, and the sidebar holds a full glossary (`churn/glossary.py`).
+An English Streamlit dashboard (`app.py`) with ten sections. **Every metric column, control and KPI has a hover tooltip**, every section has a *Key terms* panel, and the sidebar holds a full glossary (`churn/glossary.py`).
 
 | # | Section | What you will find |
 |---|---|---|
@@ -79,6 +79,7 @@ An English Streamlit dashboard (`app.py`) with nine sections. **Every metric col
 | 6 | Feature Importance | Built-in importance (four tree models) and permutation importance (all five models), with automated insights. |
 | 7 | Interactive Churn Prediction Tool | Enter a customer profile; get each model's probability, a gauge against the threshold, a what-if driver chart and a business interpretation. |
 | 8 | Methodology & Future Roadmap | Metric formulas, class weighting and threshold maths, a threshold explorer, a cost-sensitive simulator, an **animation of gradient boosting**, documented hyperparameters with explanations, and the roadmap. |
+| 9 | **🏦 The Bank Manager Retention Challenge** | A mini-game: spend a $10,000 retention budget on five customer personas, reveal who really left, and get a scored verdict against the model's plan and perfect hindsight; then run a campaign on all 2,000 test customers. [Details below](#the-bank-manager-retention-challenge-mini-game). |
 
 **Sidebar controls**
 
@@ -87,6 +88,20 @@ An English Streamlit dashboard (`app.py`) with nine sections. **Every metric col
   - *Default (0.5 cutoff)*: the models' own `predict()`, identical to `main.py`.
   - *CV-optimized (max F1)*: a per-model threshold maximising F1 on out-of-fold training predictions. The test set is never used to choose it.
   - *Custom (slider)*: any value from 0.10 to 0.90. This is exploratory, and the dashboard warns that picking a threshold by watching test metrics is test-set tuning.
+
+### The Bank Manager Retention Challenge (mini-game)
+
+You are **Head of Retention** with a **$10,000** budget. Five customers are on your desk, each scored live by the selected model. Spend the budget wisely, then reveal what really happened.
+
+| | |
+|---|---|
+| **Personas** | 👨‍💼 *David, the High-Value Business Owner* · 👩‍🎓 *Sarah, the Disengaged Student* · 👴 *Michael, the Senior Investor* · 👩‍👧 *Emma, the Established Family Customer* · 🧔 *Lukas, the Over-Banked Customer*. Each card shows the model's churn risk, the value at stake, balance, product count and a mood badge: 😊 **Loyal** (risk below the average churn rate), 😐 **Wavering**, or 😠 **High risk** (at or above the model's CV-optimised threshold). |
+| **Your moves** | Per customer: *No action*, 📞 *Personal call* ($500, 25% success), 💳 *Fee waiver* ($1,500, 40%) or 👑 *VIP package* ($3,500, 60%). A live budget meter blocks over-spending. |
+| **Reveal** | Each customer's real outcome, plus four live KPIs: ✅ **True savings** (churners you kept), ⚠️ **Wasted budget** (false positives: incentives for customers who would have stayed), ❌ **Lost revenue** (false negatives: churners you missed, plus failed incentives) and 📈 **Net ROI** = (savings − spend) / spend. |
+| **Scorecard** | A **victory or defeat** verdict with a badge (🏆 Retention Champion, 🥈 Savvy Strategist, 📈 Promising Manager, 🪙 Cautious Starter, or 💸 Budget Burner when the net value is negative) and a 0–100 **success score**: the share of the best achievable net value you captured. You are benchmarked against **the model's own plan** (expected-value optimal from its probabilities) and **perfect hindsight**. |
+| **Round 2: campaign** | Apply one incentive to the highest-risk customers among all 2,000 test customers until a campaign budget runs out. Compare **model-ranked vs random targeting vs perfect hindsight**. With the default settings, model ranking nets **+$269,972** from a $250,000 personal-call campaign, while random targeting with the same budget **loses $68,979**. |
+
+**What is real and what is assumed.** Every persona is a **real customer from the held-out test set**, scored by the real model, and the reveal shows their **real outcome**. Personas are drawn at random from each archetype with a seed per round (🔀 *New customers* deals a new round), never chosen by score or outcome. The names, avatars and stories are fictional. Customer value, incentive costs and success rates are **game assumptions** (not in the dataset); they are listed in the *Game economics* panel and can be adjusted. All money results are expected values in game dollars.
 
 ### Screenshots
 
@@ -100,6 +115,8 @@ An English Streamlit dashboard (`app.py`) with nine sections. **Every metric col
 | Tuning before vs after | `04-tuning-before-after.png` | Section 4, KPI row and the *Before vs after* chart. |
 | Cross-validation | `05-cross-validation.png` | Section 5, the box plot of fold scores. |
 | Prediction tool | `06-prediction-tool.png` | Section 7, a high-risk profile showing the gauge and the driver chart. |
+| Retention Challenge | `07-retention-challenge.png` | Section 9, the persona cards with incentives chosen. |
+| Challenge scorecard | `08-challenge-scorecard.png` | Section 9 after *Reveal outcomes*: the scorecard and the four KPIs. |
 
 <!-- ![Executive briefing](docs/screenshots/01-executive-briefing.png) -->
 <!-- ![Journey map](docs/screenshots/02-journey-map.png) -->
@@ -107,6 +124,8 @@ An English Streamlit dashboard (`app.py`) with nine sections. **Every metric col
 <!-- ![Tuning before vs after](docs/screenshots/04-tuning-before-after.png) -->
 <!-- ![Cross-validation](docs/screenshots/05-cross-validation.png) -->
 <!-- ![Prediction tool](docs/screenshots/06-prediction-tool.png) -->
+<!-- ![Retention Challenge](docs/screenshots/07-retention-challenge.png) -->
+<!-- ![Challenge scorecard](docs/screenshots/08-challenge-scorecard.png) -->
 
 The animation below is committed and renders directly on GitHub. Result tables and charts are generated into `outputs/` by `python main.py`.
 
@@ -269,6 +288,8 @@ flowchart LR
     F --> I[Metrics · ROC · confusion<br/>permutation importance]
     G & H & I --> R[outputs/report.md + CSV/PNG]
     G & H & I & M --> S[Streamlit dashboard]
+    F & H --> GM[Retention Challenge<br/>real test outcomes +<br/>assumed economics]
+    GM --> S
 ```
 
 \*The scaler is used in the Logistic Regression pipeline only.
@@ -278,6 +299,7 @@ flowchart LR
 - **One model registry** (`churn/models.py::build_models`): add a pipeline there and cross-validation, evaluation, importance, the report and the dashboard pick it up.
 - **Generated, never hand-typed, conclusions:** `churn/insights.py` and `churn/tuning.py` turn measured numbers into sentences labelled *measured* or *explanation*. If the data changes, the text changes with it.
 - **One computation path:** the dashboard (`churn/analysis.py`) uses the same split, pipelines and functions as `main.py`, and a test checks that both report the same numbers.
+- **Games stay honest:** the Retention Challenge engine (`churn/game.py`) is plain, tested Python. It scores real test customers against their real outcomes, and keeps every money assumption in one adjustable `Economics` object.
 
 ---
 
@@ -286,7 +308,7 @@ flowchart LR
 ```
 churn_modelling/
 ├── main.py                      # single entry point: the 11-step workflow
-├── app.py                       # Streamlit dashboard (9 sections)
+├── app.py                       # Streamlit dashboard (10 sections, incl. the Retention Challenge)
 ├── churn_modelling.csv          # dataset (never modified by the code)
 ├── requirements.txt
 ├── pytest.ini
@@ -308,6 +330,7 @@ churn_modelling/
 │   ├── analysis.py              # everything the dashboard computes
 │   ├── glossary.py              # definitions behind every tooltip
 │   ├── animation.py             # renders the gradient-boosting GIF
+│   ├── game.py                  # Retention Challenge engine: personas, outcomes, ROI, scoring, campaigns
 │   ├── formatting.py            # the single rounding rule
 │   └── report.py                # writes outputs/report.md
 ├── tests/                       # pytest suite (components, workflow, dashboard)
@@ -327,14 +350,15 @@ churn_modelling/
 python -m pytest
 ```
 
-The suite (79 tests) covers:
+The suite (87 tests) covers:
 
 - **Data:** validation errors for missing files or columns, a non-binary target and missing values; stratification; the absence of identifiers and the target from `X`.
 - **Leakage:** scalers learn training statistics only; CV never fits the pipeline passed in.
 - **Models:** documented settings, class weighting reaching every model, dense preprocessing output, valid probabilities.
 - **Cross-validation and tuning:** fold scores, out-of-fold coverage, grids containing the baselines, baseline candidates reproducing the baseline CV exactly, and save/load round trips of the tuned models.
 - **Workflow:** `main.py` end to end on a synthetic dataset, including every output file and the report sections.
-- **Dashboard:** headless Streamlit `AppTest` renders all nine sections under every threshold strategy and both class weightings, checks the tooltips, the journey-map navigation, and that the tuning page's numbers equal those saved by `main.py`.
+- **Retention Challenge:** the money outcomes follow the confusion matrix (true positive / false positive / false negative / true negative), the perfect plan beats every alternative within budget, the model's plan skips customers whose expected saving is below cost, personas match their archetypes and are reproducible per round, and model-ranked campaigns beat random targeting.
+- **Dashboard:** headless Streamlit `AppTest` renders all ten sections under every threshold strategy and both class weightings, checks the tooltips and the journey-map navigation, plays a full game round (over-budget blocking, reveal, scorecard, new round), and checks that the tuning page's numbers equal those saved by `main.py`.
 - **Formatting, glossary and animation:** a single rounding rule, every metric and hyperparameter explained, and the animation's loss behaviour.
 
 Reproducibility: with seed 42, repeated runs of `main.py` produce byte-identical CSV files.
@@ -363,6 +387,7 @@ Reproducibility: with seed 42, repeated runs of `main.py` produce byte-identical
 | Class weighting and CV-based threshold optimisation | ✅ Implemented |
 | GridSearchCV tuning (Random Forest, XGBoost) | ✅ Implemented |
 | Executive briefing, journey map, tooltips, boosting animation | ✅ Implemented |
+| Bank Manager Retention Challenge (mini-game) | ✅ Implemented |
 | Nested cross-validation for tuning | 🗓️ Planned |
 | Tuning LightGBM and CatBoost | 🗓️ Planned |
 | Probability calibration (`CalibratedClassifierCV`) | 🗓️ Planned |
