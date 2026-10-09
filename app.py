@@ -31,21 +31,7 @@ from churn.analysis import (
 from churn.evaluation import build_comparison_table
 from churn.explain import explain_prediction
 from churn.formatting import fmt3, fmt3_signed
-from churn.game import (
-    NO_INCENTIVE,
-    PERSONAS,
-    Economics,
-    Incentive,
-    badge,
-    best_plan,
-    campaign,
-    campaign_curve,
-    mood,
-    outcomes,
-    select_personas,
-    success_score,
-    summarise,
-)
+from churn.story_game import build_payload, render_html
 from churn.glossary import GLOSSARY, HYPERPARAMETERS, METRIC_HELP, define
 from churn.insights import (
     GAP_STD_RULE,
@@ -94,7 +80,7 @@ PAGES = [
     "6. Feature Importance",
     "7. Interactive Churn Prediction Tool",
     "8. Methodology & Future Roadmap",
-    "9. The Bank Manager Retention Challenge",
+    "9. The Chief Retention Officer: A Machine Learning Decision Story",
 ]
 # Reference categorical palette, slots 1-5 in fixed order (validated together for colour-vision deficiency).
 MODEL_COLORS = {"Logistic Regression": "#2a78d6", "Random Forest": "#eb6834", "XGBoost": "#1baf7a",
@@ -178,17 +164,6 @@ section[data-testid="stSidebar"] .stRadio label p { font-size: 0.93rem; }
 .trigger { border-radius: 12px; padding: 0.8rem 1rem; border: 1px solid rgba(128,128,128,0.25); height: 100%; }
 .trigger .big { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
 .trigger .lbl { font-size: 0.82rem; opacity: 0.75; }
-.avatar { font-size: 3rem; line-height: 1; }
-.persona-name { font-size: 1.15rem; font-weight: 700; margin: 0.2rem 0 0 0; }
-.persona-title { font-size: 0.85rem; opacity: 0.7; margin-bottom: 0.3rem; }
-.persona-story { font-size: 0.86rem; opacity: 0.85; min-height: 2.6rem; }
-.scorecard { border-radius: 16px; padding: 1.2rem 1.4rem; margin: 0.6rem 0 1rem 0; border: 1px solid rgba(128,128,128,0.25);
-             border-left-width: 8px; }
-.scorecard.win { border-left-color: #1baf7a; background: rgba(27,175,122,0.09); }
-.scorecard.lose { border-left-color: #e34948; background: rgba(227,73,72,0.08); }
-.scorecard .icon { font-size: 2.6rem; float: left; margin-right: 1rem; line-height: 1; }
-.scorecard h3 { margin: 0; font-size: 1.45rem; }
-.scorecard p { margin: 0.2rem 0 0 0; opacity: 0.88; }
 </style>
 """,
     unsafe_allow_html=True,
@@ -1717,298 +1692,49 @@ threshold = select_f1_threshold(y_train, oof_scores)        # or select_cost_thr
 
 
 # =============================================================================
-# 9. The Bank Manager Retention Challenge (mini-game)
+# 9. The Chief Retention Officer: an interactive machine learning decision story
 # =============================================================================
-GAME_BUDGET = 10_000
+GAME_HEIGHT = 1320
 
 
-def money(x: float, signed: bool = False, compact: bool = False) -> str:
-    sign = "−" if x < 0 else ("+" if signed and x > 0 else "")
-    if compact and abs(x) >= 1_000_000:
-        return f"{sign}${abs(x) / 1_000_000:.2f}M"
-    return f"{sign}${abs(x):,.0f}"
+@st.cache_data(show_spinner="Preparing the game with real test-set customers…")
+def story_game_html(class_weight: str | None, weighting: str) -> str:
+    """The self-contained HTML/JS game, with this configuration's real model scores baked in."""
+    a = get_analysis(class_weight)
+    payload = build_payload(a, best=best_model(a.cv_summary()), colors=MODEL_COLORS, weighting=weighting)
+    return render_html(payload)
 
 
-def game_economics() -> Economics:
-    """Game assumptions, adjustable in the 'Game economics' panel (defaults from churn.game.Economics)."""
-    d = Economics()
-    with st.expander("⚙️ Game economics (assumptions, adjustable)"):
-        st.markdown("These numbers are **not in the dataset**. They are assumptions that turn model decisions into "
-                    "money. Change them and watch the best strategy change.")
-        c = st.columns(3)
-        base = c[0].number_input("Base value per customer ($)", 0, 20_000, int(d.base_value), 500, key="eco_base",
-                                 help="Value lost when any customer leaves, before products and balance.")
-        per_product = c[1].number_input("Value per product held ($)", 0, 10_000, int(d.per_product), 250, key="eco_prod",
-                                        help="Extra value for each bank product the customer holds.")
-        share = c[2].slider("Share of balance counted as value", 0.0, 0.10, d.balance_share, 0.005, key="eco_share",
-                            format="%.3f", help="E.g. 0.04 = 4% of the balance is counted as value lost if they leave.")
-        incentives = {}
-        cols = st.columns(len(d.incentives))
-        for col, (name, inc) in zip(cols, d.incentives.items()):
-            with col:
-                st.markdown(f"**{name}**")
-                cost = st.number_input("Cost ($)", 0, 20_000, int(inc.cost), 100, key=f"eco_cost_{name}",
-                                       help="What the incentive costs per customer, whether or not they would have left.")
-                success = st.slider("Success rate", 0.0, 1.0, inc.success, 0.05, key=f"eco_succ_{name}",
-                                    help="Chance that a customer who would have churned stays because of the incentive.")
-                incentives[name] = Incentive(cost=float(cost), success=float(success))
-        st.caption("Customer value = base + per-product value × products + share × balance. Results are expected values.")
-    return Economics(base_value=float(base), per_product=float(per_product), balance_share=float(share),
-                     incentives=incentives)
-
-
-def _new_round() -> None:
-    st.session_state["game_round"] = st.session_state.get("game_round", 1) + 1
-    st.session_state["game_revealed"] = False
-
-
-def _reveal() -> None:
-    st.session_state["game_revealed"] = True
-
-
-def _reset_choices(round_no: int) -> None:
-    for persona in PERSONAS:
-        st.session_state[f"game_{round_no}_{persona.key}"] = NO_INCENTIVE
-    st.session_state["game_revealed"] = False
-
-
-def page_game() -> None:
-    page_header(9, "You are Head of Retention. Spend a fixed budget on the right customers, guided by the model, "
-                   "and see what your decisions are really worth.")
-    best = best_model(A.cv_summary())
-    threshold = A.tuned_thresholds[best]
-    round_no = st.session_state.setdefault("game_round", 1)
-    revealed = st.session_state.setdefault("game_revealed", False)
-
-    st.markdown(
-        f"""<div class="hero"><div class="eyebrow">Mini-game · round {round_no}</div>
-<h2>🏦 The Bank Manager Retention Challenge</h2>
-<p>Five customers are on your desk and you have <b>{money(GAME_BUDGET)}</b> to spend. {best} has scored each one's churn risk.
-Choose who gets a personal call, a fee waiver or a VIP package, then reveal what really happened.
-Save churners, don't waste money on loyal customers, and beat the model.</p></div>""",
-        unsafe_allow_html=True,
+def page_story_game() -> None:
+    page_header(9, "Run retention at a commercial bank for five weeks. Every click is a decision; every outcome is real.")
+    st.caption(
+        "Everything below is interactive and runs instantly in your browser. Customers are real held-out test "
+        "customers (fictional names), scored live by every model, and their outcomes are real. Customer values, "
+        "incentive costs and success rates are game assumptions. "
+        f"Current sidebar weighting: **{weighting_label.split(' (')[0]}**."
     )
-    h = st.columns(3)
-    for col, (title, text) in zip(h, [
-        ("1 · Read the risk", "Each card shows the model's churn probability and a mood badge. Red = above the model's "
-                              f"decision threshold ({threshold:.0%})."),
-        ("2 · Spend the budget", f"Pick an incentive per customer. Pricier incentives work more often. Stay within "
-                                 f"{money(GAME_BUDGET)}."),
-        ("3 · Reveal & score", "See who actually left, what you saved and wasted, and how you compare with the "
-                               "model's own plan and a manager with perfect hindsight."),
-    ]):
-        col.markdown(f"**{title}**  \n{text}")
-
-    econ = game_economics()
-    key_terms("False positive (FP)", "False negative (FN)", "Threshold", "Precision", "Recall")
-
-    P = select_personas(A.X_test, round_no)
-    positions = [A.X_test.index.get_loc(i) for i in P.index]
-    probs = A.test_scores[best][positions]
-    churned = A.y_test.loc[P.index].to_numpy().astype(bool)
-    values = econ.customer_value(P).to_numpy()
-
-    top = st.columns([3, 1, 1], vertical_alignment="center")
-    top[0].markdown(f"**Round {round_no}** · risk scores from **{best}** (selected by cross-validation) · "
-                    f"weighting: {weighting_label.split(' (')[0]}")
-    top[1].button("↺ Reset choices", on_click=_reset_choices, args=(round_no,), width="stretch", key="game_reset",
-                  help="Set every customer back to 'No action' for this round.")
-    top[2].button("🔀 New customers", on_click=_new_round, width="stretch", key="game_next",
-                  help="Deal five new real test customers (a new seeded random draw per archetype).")
-
-    options = econ.options()
-    decisions = []
-    rows = [st.columns(3, gap="medium"), st.columns(3, gap="medium")]
-    cells = rows[0] + rows[1]
-    for cell, persona, (_, row), prob, value, left in zip(cells, PERSONAS, P.iterrows(), probs, values, churned):
-        label, colour = mood(prob, threshold, A.base_rate)
-        with cell.container(border=True):
-            a, b = st.columns([1, 3], vertical_alignment="center")
-            a.markdown(f'<div class="avatar">{persona.avatar}</div>', unsafe_allow_html=True)
-            b.markdown(f'<div class="persona-name">{persona.name}</div><div class="persona-title">{persona.title}</div>',
-                       unsafe_allow_html=True)
-            st.badge(label, color=colour)
-            st.markdown(f'<div class="persona-story">{persona.story}</div>', unsafe_allow_html=True)
-            m = st.columns(2)
-            m[0].metric("Churn risk", f"{prob:.0%}", help=f"P(Exited = 1) from {best}. " + define("Threshold"))
-            m[1].metric("Value at stake", money(value), help="Assumed value lost if this customer leaves (see Game economics).")
-            st.caption(f"Age {row['Age']} · {row['Geography']} · balance ${row['Balance']:,.0f} · "
-                       f"{row['NumOfProducts']} product{'s' if row['NumOfProducts'] != 1 else ''} · "
-                       f"{'active' if row['IsActiveMember'] else 'inactive'} · {row['Tenure']} yrs tenure")
-            choice = st.selectbox(
-                "Incentive", options, key=f"game_{round_no}_{persona.key}", disabled=revealed,
-                format_func=lambda o: o if o == NO_INCENTIVE else f"{o} · {money(econ.cost(o))} · {econ.success(o):.0%} success",
-                help="Cost is paid whether or not the customer would have left; success = chance a would-be churner stays.",
-            )
-            decisions.append(choice)
-            if revealed:
-                result = outcomes([choice], [left], [value], econ).iloc[0]
-                if left and choice != NO_INCENTIVE:
-                    st.success(f"🚪 Was going to leave. Expected saving {money(result['true_savings'])}.", icon="✅")
-                elif left:
-                    st.error(f"🚪 Left the bank. Lost {money(result['lost_revenue'])} (missed churner).", icon="❌")
-                elif choice != NO_INCENTIVE:
-                    st.warning(f"🏠 Would have stayed anyway. {money(result['wasted'])} wasted.", icon="⚠️")
-                else:
-                    st.info("🏠 Stayed. Correctly left alone.", icon="👍")
-
-    spent = sum(econ.cost(d) for d in decisions)
-    with cells[5].container(border=True):
-        st.markdown("##### 💰 Retention budget")
-        st.metric("Remaining", money(GAME_BUDGET - spent), help=f"Total budget {money(GAME_BUDGET)} for this round.")
-        st.progress(min(spent / GAME_BUDGET, 1.0),
-                    text=f"{money(spent)} committed · {spent / GAME_BUDGET:.0%} of budget")
-        over = spent > GAME_BUDGET
-        if over:
-            st.error(f"Over budget by {money(spent - GAME_BUDGET)}. Remove an incentive to continue.")
-        st.button("🎲 Reveal outcomes", type="primary", width="stretch", key="game_reveal", on_click=_reveal,
-                  disabled=over or revealed, help="Lock your choices and see who really left.")
-        st.caption("Outcomes are the real results of these held-out test customers.")
-
-    if not revealed:
-        st.info("Make your choices, then press **Reveal outcomes**. The model's own plan and the perfect-hindsight "
-                "plan are shown after the reveal.", icon="🎯")
-    else:
-        you = summarise(outcomes(decisions, churned, values, econ))
-        model_plan = best_plan(probs, values, econ, GAME_BUDGET)
-        perfect_plan = best_plan(churned.astype(float), values, econ, GAME_BUDGET)
-        model_res = summarise(outcomes(model_plan, churned, values, econ))
-        perfect = summarise(outcomes(perfect_plan, churned, values, econ))
-        score = success_score(you["net"], perfect["net"])
-        icon, title, message = badge(score, you["net"])
-        won = you["net"] > 0 and score >= 60
+    # st.iframe replaces the deprecated st.components.v1.html. The HTML is generated by this project
+    # (never user input), as st.iframe requires for HTML with JavaScript.
+    st.iframe(story_game_html(class_weight, weighting_label.split(" (")[0]), height=GAME_HEIGHT)
+    with st.expander("How the game works, and what is real"):
         st.markdown(
-            f"""<div class="scorecard {'win' if won else 'lose'}"><div class="icon">{icon}</div>
-<h3>{'Victory' if won else 'Defeat'}: {title} · Success score {score}/100</h3>
-<p>{message} Your net value: <b>{money(you['net'], True)}</b> · the model's plan: <b>{money(model_res['net'], True)}</b> ·
-perfect hindsight: <b>{money(perfect['net'], True)}</b>.</p></div>""",
-            unsafe_allow_html=True,
+            "- **Story:** four short chapters introduce churn risk probability, the decision threshold, and the "
+            "Precision/Recall trade-off, using this project's own numbers.\n"
+            "- **Each week:** five persona cards (David, Sarah, Michael, Emma, Lukas). Each is a real test customer "
+            "drawn at random from an archetype (seeded per week, never chosen by score or outcome). Click a card to "
+            "talk; give incentives with the buttons; the chat bubbles, risk badges and money tickers react instantly.\n"
+            "- **Model switcher:** swap Logistic Regression, Random Forest, XGBoost, LightGBM and CatBoost live: risk "
+            "scores, flags and the at-scale panel update.\n"
+            "- **Threshold:** customers with risk ≥ the threshold are flagged. *Target all flagged* applies one "
+            "incentive to them; the at-scale panel shows the real Precision, Recall, waste and net value of that rule "
+            "on all 2,000 test customers.\n"
+            "- **Reveal & debrief:** real outcomes, true savings, wasted budget, lost revenue, ROI, a 0–100 success "
+            "score against perfect hindsight, every model's own plan, and generated lessons.\n"
+            "- **Engine:** money and scoring logic lives in `churn/game_assets/engine.js`; the test suite runs it "
+            "under Node and checks it against the Python reference in `churn/game.py`."
         )
-        k = st.columns(4)
-        k[0].metric("✅ True savings", money(you["true_savings"]), border=True,
-                    help="Expected value kept: churners you targeted × incentive success rate × their value.")
-        k[1].metric("⚠️ Wasted budget", money(you["wasted"]), border=True,
-                    help="Incentives spent on customers who would have stayed anyway. " + define("False positive (FP)"))
-        k[2].metric("❌ Lost revenue", money(you["lost_revenue"]), border=True,
-                    help="Value of churners you missed, plus the share of targeted churners the incentive failed to keep. "
-                         + define("False negative (FN)"))
-        k[3].metric("📈 Net ROI", f"{you['roi']:+.0%}" if you["spend"] else "n/a", border=True,
-                    delta=f"{money(you['net'], True)} net", delta_color="normal" if you["net"] >= 0 else "inverse",
-                    help="(True savings − spend) / spend. Net value = true savings − spend.")
 
-        c1, c2 = st.columns([3, 2], gap="large")
-        with c1:
-            fig = go.Figure()
-            names = ["You", f"Model's plan ({best})", "Perfect hindsight"]
-            results = [you, model_res, perfect]
-            colors = ["#2a78d6", MODEL_COLORS.get(best, "#1baf7a"), BASELINE]
-            for metric, label, opacity in [("true_savings", "True savings", 1.0), ("spend", "Spend", 0.45)]:
-                fig.add_bar(name=label, x=names, y=[r[metric] for r in results], marker_color=colors, opacity=opacity,
-                            text=[money(r[metric]) for r in results], textposition="outside",
-                            hovertemplate="%{x}<br>" + label + ": %{text}<extra></extra>",
-                            marker_pattern_shape="" if metric == "true_savings" else "/")
-            fig.update_layout(barmode="group", yaxis=dict(title="Game dollars", tickprefix="$"), showlegend=True,
-                              legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"))
-            plotly(fig, 360)
-            st.caption("Solid = expected savings, hatched = money spent. Net value = savings − spend.")
-        with c2:
-            st.markdown("**Decision review**")
-            st.dataframe(pd.DataFrame({
-                "Customer": [f"{p.avatar} {p.name}" for p in PERSONAS],
-                "Risk": [f"{x:.0%}" for x in probs],
-                "Actually": ["🚪 left" if x else "🏠 stayed" for x in churned],
-                "You": decisions, "Model": model_plan, "Hindsight": perfect_plan,
-            }), hide_index=True, width="stretch", column_config={
-                "Model": st.column_config.Column(help="Maximises expected value using the model's probabilities, within budget."),
-                "Hindsight": st.column_config.Column(help="The best plan if you had known who would leave."),
-            })
-            lessons = []
-            fp = [p.name for p, d, x in zip(PERSONAS, decisions, churned) if d != NO_INCENTIVE and not x]
-            fn = [p.name for p, d, x in zip(PERSONAS, decisions, churned) if d == NO_INCENTIVE and x]
-            missed_by_model = [p.name for p, pr, x in zip(PERSONAS, probs, churned) if x and pr < threshold]
-            if fp:
-                lessons.append(f"False positives: {', '.join(fp)} would have stayed; that spend was wasted.")
-            if fn:
-                lessons.append(f"False negatives: {', '.join(fn)} left without any retention attempt.")
-            if missed_by_model:
-                lessons.append(f"The model also rated {', '.join(missed_by_model)} below its threshold but they left: "
-                               "no model is perfect, which is why Recall matters.")
-            if not lessons:
-                lessons.append("No false positives and no false negatives this round. Textbook retention.")
-            bullets(lessons)
-
-    st.divider()
-    st.subheader("Round 2 · Scale it up: a campaign on all 2,000 test customers")
-    st.markdown("Now apply one incentive to the **highest-risk customers first**, as ranked by the model, until the "
-                "campaign budget runs out. Compare with targeting customers **at random** and with **perfect hindsight**.")
-    c = st.columns(3)
-    camp_budget = c[0].slider("Campaign budget ($)", 50_000, 1_000_000, 250_000, 50_000, key="camp_budget", format="$%d",
-                              help="Total money available for the campaign.")
-    camp_option = c[1].selectbox("Incentive for everyone targeted", list(econ.incentives), key="camp_option",
-                                 help="Cheap incentives reach more customers; expensive ones keep more of those they reach.")
-    min_risk = c[2].slider("Only target customers with risk ≥", 0.0, 0.9, 0.0, 0.05, key="camp_min_risk",
-                           help="A risk floor: customers below it are never targeted, even if budget remains. "
-                                + define("Threshold"))
-    all_values = econ.customer_value(A.X_test).to_numpy()
-    scores, truth = A.test_scores[best], A.y_test.to_numpy().astype(bool)
-    camp = campaign(scores, truth, all_values, econ, camp_option, camp_budget, min_risk)
-    mres = camp["model"]
-    k = st.columns(5)
-    k[0].metric("Customers targeted", f"{mres['n_targeted']:,}", border=True,
-                help=f"min(budget ÷ cost, customers with risk ≥ {min_risk:.2f}).")
-    k[1].metric("Churners reached", f"{mres['churners_targeted']:,}", border=True,
-                help=f"Of {int(truth.sum()):,} churners in the test set. " + define("True positive (TP)"))
-    k[2].metric(f"Wasted on {mres['loyal_targeted']:,} loyal", money(mres["wasted"], compact=True), border=True,
-                help="Incentives paid to targeted customers who would have stayed. " + define("False positive (FP)"))
-    k[3].metric(f"Lost: {mres['churners_missed']:,} missed", money(mres["lost_revenue"], compact=True), border=True,
-                help="Value of churners not targeted, plus the share of targeted churners the incentive failed to keep. "
-                     + define("False negative (FN)"))
-    k[4].metric("Net ROI", f"{mres['roi']:+.0%}" if mres["spend"] else "n/a", border=True,
-                delta=f"{money(mres['net'], True, compact=True)} net", delta_color="normal" if mres["net"] >= 0 else "inverse",
-                help="(True savings − spend) / spend.")
-
-    c1, c2 = st.columns([3, 2], gap="large")
-    with c1:
-        curve = campaign_curve(scores, truth, all_values, econ, camp_option,
-                               max_n=max(int(camp_budget // max(econ.cost(camp_option), 1)), 50))
-        fig = go.Figure()
-        fig.add_scatter(x=curve["n"], y=curve["model"], mode="lines", name=f"Ranked by {best}",
-                        line=dict(color=MODEL_COLORS.get(best, "#1baf7a"), width=2.5),
-                        customdata=[money(v, True) for v in curve["model"]],
-                        hovertemplate="Top %{x} customers: %{customdata}<extra></extra>")
-        fig.add_scatter(x=curve["n"], y=curve["random"], mode="lines", name="Random targeting",
-                        line=dict(color=BASELINE, width=2, dash="dash"),
-                        customdata=[money(v, True) for v in curve["random"]],
-                        hovertemplate="%{x} random customers: %{customdata}<extra></extra>")
-        fig.add_vline(x=mres["n_targeted"], line_color="#e34948", line_width=1.5,
-                      annotation_text="your campaign", annotation_position="top")
-        fig.add_hline(y=0, line_color=BASELINE, line_width=1)
-        fig.update_layout(xaxis=dict(title="Customers targeted (highest risk first)"),
-                          yaxis=dict(title="Net value (game $)", tickprefix="$"),
-                          legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"))
-        plotly(fig, 380)
-        peak = int(curve.loc[curve["model"].idxmax(), "n"])
-        st.caption("The curve rises while each next customer in line is likely enough to churn to justify the cost. "
-                   + (f"It peaks at about {peak:,} customers; beyond that, extra spend mostly goes to loyal customers."
-                      if peak < curve["n"].max() else "With this incentive it is still rising at the budget limit: "
-                      "a bigger budget would pay off."))
-    with c2:
-        fig = go.Figure(go.Bar(
-            x=["Model-ranked", "Random", "Perfect hindsight"],
-            y=[camp["model"]["net"], camp["random"]["net"], camp["perfect"]["net"]],
-            marker_color=[MODEL_COLORS.get(best, "#1baf7a"), BASELINE, "rgba(138,137,132,0.4)"],
-            text=[money(v, True) for v in (camp["model"]["net"], camp["random"]["net"], camp["perfect"]["net"])],
-            textposition="outside", hovertemplate="%{x}: %{text}<extra></extra>",
-        ))
-        fig.add_hline(y=0, line_color=BASELINE, line_width=1)
-        fig.update_layout(yaxis=dict(title="Net value (game $)", tickprefix="$"), showlegend=False)
-        plotly(fig, 380)
-        gap = camp["model"]["net"] - camp["random"]["net"]
-        st.markdown(f"Same budget, same incentive: ranking customers with the model is worth **{money(gap, True)}** "
-                    "more than picking them at random.")
-    st.caption("Game dollars are illustrative. Customer outcomes and model scores are real (held-out test set); "
-               "values, costs and success rates are the assumptions in Game economics.")
 
 # --- Router ------------------------------------------------------------------------
-ROUTES = [page_briefing, page_overview, page_pipeline, page_models, page_tuning, page_cv, page_importance, page_predict, page_methodology, page_game]
+ROUTES = [page_briefing, page_overview, page_pipeline, page_models, page_tuning, page_cv, page_importance, page_predict, page_methodology, page_story_game]
 ROUTES[PAGES.index(page)]()

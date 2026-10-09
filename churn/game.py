@@ -1,7 +1,9 @@
-"""The Bank Manager Retention Challenge: the engine behind the dashboard's mini-game.
+"""The Chief Retention Officer game: personas, game economics and the Python reference engine.
 
-The player is Head of Retention with a fixed budget and spends it on retention
-incentives, guided by the model's churn risk scores.
+The player runs retention with a fixed weekly budget and spends it on incentives,
+guided by the models' churn risk scores. The game runs in the browser
+(churn/game_assets/engine.js); this module selects its customers and is the
+tested reference implementation that the JavaScript engine is checked against.
 
 What is real and what is assumed:
 
@@ -109,15 +111,6 @@ def select_personas(X_test: pd.DataFrame, round_no: int = 1, personas: list[Pers
     return X_test.loc[chosen]
 
 
-def mood(probability: float, threshold: float, base_rate: float) -> tuple[str, str]:
-    """Emotional status badge from the model's risk score: (label, colour)."""
-    if probability >= threshold:
-        return "😠 High risk of churn", "red"
-    if probability >= base_rate:
-        return "😐 Wavering", "orange"
-    return "😊 Loyal", "green"
-
-
 # --- Outcomes ----------------------------------------------------------------------
 OUTCOME_COLUMNS = ["spend", "true_savings", "wasted", "lost_revenue"]
 
@@ -193,43 +186,3 @@ def badge(score: int, net: float) -> tuple[str, str, str]:
     if net < 0:
         return BUDGET_BURNER
     return next(b[1:] for b in BADGES if score >= b[0])
-
-
-# --- Campaign at scale -----------------------------------------------------------------
-def campaign(scores, churned, value, econ: Economics, option: str, budget: float, min_risk: float = 0.0) -> dict:
-    """Target the highest-risk customers (score ≥ min_risk) with one incentive until the budget runs out.
-
-    Also returns two references for the same number of targeted customers:
-    random targeting (expected value) and perfect information (highest-value true churners).
-    """
-    scores, churned, value = np.asarray(scores, float), np.asarray(churned, bool), np.asarray(value, float)
-    cost, success = econ.cost(option), econ.success(option)
-    eligible = np.flatnonzero(scores >= min_risk)
-    n = int(min(len(eligible), budget // cost)) if cost > 0 else 0
-    target = eligible[np.argsort(-scores[eligible], kind="stable")[:n]]
-    decisions = np.full(len(scores), NO_INCENTIVE, dtype=object)
-    decisions[target] = option
-    model = summarise(outcomes(decisions, churned, value, econ))
-    model.update(n_targeted=n, churners_targeted=int(churned[target].sum()), loyal_targeted=int((~churned[target]).sum()),
-                 churners_missed=int(churned.sum() - churned[target].sum()))
-
-    spend = n * cost
-    random_savings = n / len(scores) * success * value[churned].sum()  # expected under random targeting
-    oracle_idx = np.flatnonzero(churned)[np.argsort(-value[churned], kind="stable")[:n]]
-    oracle_savings = success * value[oracle_idx].sum()
-    return {
-        "model": model,
-        "random": {"net": random_savings - spend, "true_savings": random_savings, "spend": spend},
-        "perfect": {"net": oracle_savings - spend, "true_savings": oracle_savings, "spend": spend},
-    }
-
-
-def campaign_curve(scores, churned, value, econ: Economics, option: str, max_n: int, points: int = 60) -> pd.DataFrame:
-    """Net value as the number of targeted customers grows: model ranking vs random targeting."""
-    scores, churned, value = np.asarray(scores, float), np.asarray(churned, bool), np.asarray(value, float)
-    order = np.argsort(-scores, kind="stable")
-    cost, success = econ.cost(option), econ.success(option)
-    saved_cum = np.concatenate([[0.0], np.cumsum(np.where(churned[order], success * value[order], 0.0))])
-    ns = np.unique(np.linspace(0, min(max_n, len(scores)), points).astype(int))
-    random_per = success * value[churned].sum() / len(scores)
-    return pd.DataFrame({"n": ns, "model": saved_cum[ns] - ns * cost, "random": ns * (random_per - cost)})

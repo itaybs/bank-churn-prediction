@@ -1,6 +1,6 @@
 # Bank Customer Churn Prediction
 
-**Predicting which bank customers will leave, using five machine-learning models, rigorous cross-validation, hyperparameter tuning, an interactive analytics dashboard, and a retention mini-game that turns model scores into money decisions.**
+**Predicting which bank customers will leave, using five machine-learning models, rigorous cross-validation and hyperparameter tuning, explained through an interactive analytics dashboard and an immersive decision-story game.**
 
 ![Python](https://img.shields.io/badge/Python-tested%20on%203.14-3776AB?logo=python&logoColor=white)
 ![scikit-learn](https://img.shields.io/badge/scikit--learn-Pipeline%20%7C%20GridSearchCV-F7931E?logo=scikitlearn&logoColor=white)
@@ -10,13 +10,28 @@
 
 > **20.4% of the bank's 10,000 customers left.** This project ranks every customer by churn risk so that a retention team can act before revenue is lost. It compares an interpretable baseline with four tree ensembles, selects the winner on cross-validation (never on the test set), and explains every result in an interactive dashboard.
 
+## ⭐ The crown jewel: *The Chief Retention Officer*
+
+**An interactive machine learning decision story** (dashboard Section 9). You are the newly appointed Chief Retention Officer of a commercial bank. For five weeks you receive a $10,000 budget and five customers. Using the models' churn risk scores, you decide who gets a 📞 personal call, a 💳 fee waiver or a 👑 VIP package. Then you find out who really left.
+
+- **It teaches by playing.** Four story chapters introduce *churn risk probability*, the *decision threshold* (CatBoost at the default 50% catches 50% of churners; at its cross-validated 28% it catches 70%) and the *Precision vs Recall* trade-off: wasted budget vs lost revenue.
+- **Everything is clickable and instant.** It is built as a self-contained HTML/JS app inside Streamlit:
+  - persona cards with live avatars and chat bubbles that react to every click and incentive;
+  - glowing risk badges, and a threshold slider with *target all flagged*;
+  - animated budget, savings and ROI tickers, and glassmorphism styling.
+- **A model switcher inside the game.** Swap Logistic Regression, Random Forest, XGBoost, LightGBM and CatBoost live, and watch the risk scores, the flags and your expected ROI change. An *at-scale* panel shows what your rule means for all 2,000 test customers.
+- **Debriefs that explain.** After each week you get a victory or defeat verdict, a success score and generated lessons such as *"Your threshold (50%) was too strict for Lukas: scored 30%, but left"*. It also compares every model's plan on the same customers, and shows how much model choice is worth at scale: a fee-waiver campaign nets **+$141,095 with XGBoost but −$93,923 with Logistic Regression**.
+- **Real where it matters.** Every customer is a real held-out test customer with their real outcome; only the names, the stories and the money assumptions are invented. The game's engine (`engine.js`) is executed by the test suite under Node and checked against the Python reference engine.
+
+[How it works ↓](#the-chief-retention-officer-interactive-decision-story)
+
 ---
 
 ## Table of contents
 
 1. [Executive summary](#1-executive-summary)
 2. [Quick start](#2-quick-start)
-3. [Dashboard tour](#3-dashboard-tour) · [🏦 The Bank Manager Retention Challenge](#the-bank-manager-retention-challenge-mini-game)
+3. [Dashboard tour](#3-dashboard-tour) · [⭐ The Chief Retention Officer](#the-chief-retention-officer-interactive-decision-story)
 4. [Results](#4-results)
 5. [Methodology and theory](#5-methodology-and-theory)
 6. [Architecture](#6-architecture)
@@ -50,7 +65,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 python main.py                 # full workflow -> outputs/ (~8-10 min, mostly GridSearchCV)
-python -m pytest               # 87 automated tests (~8 min including the dashboard tests)
+python -m pytest               # 93 automated tests (~8 min including the dashboard tests)
 streamlit run app.py --server.address=localhost --server.port=8501
 ```
 
@@ -79,7 +94,7 @@ An English Streamlit dashboard (`app.py`) with ten sections. **Every metric colu
 | 6 | Feature Importance | Built-in importance (four tree models) and permutation importance (all five models), with automated insights. |
 | 7 | Interactive Churn Prediction Tool | Enter a customer profile; get each model's probability, a gauge against the threshold, a what-if driver chart and a business interpretation. |
 | 8 | Methodology & Future Roadmap | Metric formulas, class weighting and threshold maths, a threshold explorer, a cost-sensitive simulator, an **animation of gradient boosting**, documented hyperparameters with explanations, and the roadmap. |
-| 9 | **🏦 The Bank Manager Retention Challenge** | A mini-game: spend a $10,000 retention budget on five customer personas, reveal who really left, and get a scored verdict against the model's plan and perfect hindsight; then run a campaign on all 2,000 test customers. [Details below](#the-bank-manager-retention-challenge-mini-game). |
+| 9 | **⭐ The Chief Retention Officer: A Machine Learning Decision Story** | The interactive story game: five weeks, five real customers a week, a live model switcher and threshold, instant chat-bubble reactions, real outcomes and an educational debrief. [Details below](#the-chief-retention-officer-interactive-decision-story). |
 
 **Sidebar controls**
 
@@ -89,19 +104,30 @@ An English Streamlit dashboard (`app.py`) with ten sections. **Every metric colu
   - *CV-optimized (max F1)*: a per-model threshold maximising F1 on out-of-fold training predictions. The test set is never used to choose it.
   - *Custom (slider)*: any value from 0.10 to 0.90. This is exploratory, and the dashboard warns that picking a threshold by watching test metrics is test-set tuning.
 
-### The Bank Manager Retention Challenge (mini-game)
+### The Chief Retention Officer (interactive decision story)
 
-You are **Head of Retention** with a **$10,000** budget. Five customers are on your desk, each scored live by the selected model. Spend the budget wisely, then reveal what really happened.
-
-| | |
+| Stage | What happens |
 |---|---|
-| **Personas** | 👨‍💼 *David, the High-Value Business Owner* · 👩‍🎓 *Sarah, the Disengaged Student* · 👴 *Michael, the Senior Investor* · 👩‍👧 *Emma, the Established Family Customer* · 🧔 *Lukas, the Over-Banked Customer*. Each card shows the model's churn risk, the value at stake, balance, product count and a mood badge: 😊 **Loyal** (risk below the average churn rate), 😐 **Wavering**, or 😠 **High risk** (at or above the model's CV-optimised threshold). |
-| **Your moves** | Per customer: *No action*, 📞 *Personal call* ($500, 25% success), 💳 *Fee waiver* ($1,500, 40%) or 👑 *VIP package* ($3,500, 60%). A live budget meter blocks over-spending. |
-| **Reveal** | Each customer's real outcome, plus four live KPIs: ✅ **True savings** (churners you kept), ⚠️ **Wasted budget** (false positives: incentives for customers who would have stayed), ❌ **Lost revenue** (false negatives: churners you missed, plus failed incentives) and 📈 **Net ROI** = (savings − spend) / spend. |
-| **Scorecard** | A **victory or defeat** verdict with a badge (🏆 Retention Champion, 🥈 Savvy Strategist, 📈 Promising Manager, 🪙 Cautious Starter, or 💸 Budget Burner when the net value is negative) and a 0–100 **success score**: the share of the best achievable net value you captured. You are benchmarked against **the model's own plan** (expected-value optimal from its probabilities) and **perfect hindsight**. |
-| **Round 2: campaign** | Apply one incentive to the highest-risk customers among all 2,000 test customers until a campaign budget runs out. Compare **model-ranked vs random targeting vs perfect hindsight**. With the default settings, model ranking nets **+$269,972** from a $250,000 personal-call campaign, while random targeting with the same budget **loses $68,979**. |
+| **Story** | Four chapters with this project's own numbers: your mission and budget, churn risk probability and each model's ROC-AUC, the decision threshold (50% vs the cross-validated optimum, with real Recall and Precision on 2,000 test customers), and the four outcomes (true and false positives and negatives). |
+| **Weekly board** | Five persona cards: 👨‍💼 *David, the High-Value Business Owner*, 👩‍🎓 *Sarah, the Disengaged Student*, 👴 *Michael, the Senior Investor*, 👩‍👧 *Emma, the Established Family Customer* and 🧔 *Lukas, the Over-Banked Customer*. Each shows a live avatar, a chat bubble, a glowing risk badge (😠 high risk at or above the threshold, 😐 wavering above the base rate, 😊 loyal), a risk bar with the threshold marker, a profile and the value at stake. Clicking a card makes the customer talk. Each card has four action buttons (🚫 none, 📞 $500 / 25% success, 💳 $1,500 / 40%, 👑 $3,500 / 60%), and the bubble reacts to each choice. Over-budget choices shake the card. |
+| **Live HUD** | Budget left with a progress bar, money committed, model-expected savings and expected ROI, and the season total, all animated tickers. |
+| **Model switcher** | Five chips with each model's CV ROC-AUC and optimal threshold. Switching re-scores every card instantly. |
+| **Threshold** | A slider, *use the model's optimum*, *default 50%*, and **🎯 target all flagged** with an incentive of your choice (highest risk first when the budget is short). |
+| **At-scale panel** | For the current model, threshold and incentive: flagged customers, Recall, Precision, wasted budget, missed churners and net value on all 2,000 test customers, computed from real confusion counts. |
+| **Reveal** | Cards flip one by one with the real outcome (✅ reached a churner, ❌ missed churner, ⚠️ wasted on a loyal customer, 👍 correctly left alone), and the chat bubbles tell their side of the story. The tickers switch to real savings and ROI. |
+| **Debrief** | A victory or defeat verdict with a badge and an animated 0–100 success score (your net value as a share of perfect hindsight), plus true savings, wasted budget, lost revenue and net ROI. You are compared with your model's own plan and with perfect hindsight; a chart shows every model's plan scored on the real outcomes. Generated lessons cover the threshold (who slipped below it), Precision (loyal customers flagged), your false positives and negatives, model choice this week, and model choice at scale. |
+| **Season report** | After five weeks: your total vs following the models vs perfect hindsight, wasted vs lost, and five takeaways for a Chief Retention Officer. |
 
-**What is real and what is assumed.** Every persona is a **real customer from the held-out test set**, scored by the real model, and the reveal shows their **real outcome**. Personas are drawn at random from each archetype with a seed per round (🔀 *New customers* deals a new round), never chosen by score or outcome. The names, avatars and stories are fictional. Customer value, incentive costs and success rates are **game assumptions** (not in the dataset); they are listed in the *Game economics* panel and can be adjusted. All money results are expected values in game dollars.
+**What is real and what is assumed.**
+- **Real:** every persona is a real customer from the held-out test set, drawn at random from an archetype with a fixed seed per week (never chosen by score or outcome). Each customer's five model probabilities and their real outcome come from the test set, as do the confusion counts behind the at-scale panel.
+- **Invented:** the names, avatars, stories and dialogue.
+- **Assumed:** customer value (base + per product + share of balance), incentive costs and success rates are game assumptions (`churn/game.py::Economics`). Money results are expected values in game dollars.
+
+**How it is built.**
+- **Data:** `churn/story_game.py` builds a JSON payload from the analysis (customers, five models' probabilities, CV thresholds, and confusion counts at every threshold).
+- **Page:** it injects the payload into `churn/game_assets/game.html`, which has no external requests.
+- **Embedding:** the dashboard embeds the page with `st.iframe`, the current replacement for the deprecated `st.components.v1.html`.
+- **Money logic:** all money and scoring logic lives in `churn/game_assets/engine.js` as pure functions. `tests/test_story_game.py` runs it under Node and compares outcomes, plans, scores, badges and at-scale statistics with the Python reference engine and with direct test-set computations.
 
 ### Screenshots
 
@@ -115,8 +141,8 @@ You are **Head of Retention** with a **$10,000** budget. Five customers are on y
 | Tuning before vs after | `04-tuning-before-after.png` | Section 4, KPI row and the *Before vs after* chart. |
 | Cross-validation | `05-cross-validation.png` | Section 5, the box plot of fold scores. |
 | Prediction tool | `06-prediction-tool.png` | Section 7, a high-risk profile showing the gauge and the driver chart. |
-| Retention Challenge | `07-retention-challenge.png` | Section 9, the persona cards with incentives chosen. |
-| Challenge scorecard | `08-challenge-scorecard.png` | Section 9 after *Reveal outcomes*: the scorecard and the four KPIs. |
+| Story game: board | `07-story-game-board.png` | Section 9, a week in progress: persona cards with chat bubbles, the model switcher and the HUD. |
+| Story game: debrief | `08-story-game-debrief.png` | Section 9 after *Reveal*: the debrief with score ring, KPIs and lessons. |
 
 <!-- ![Executive briefing](docs/screenshots/01-executive-briefing.png) -->
 <!-- ![Journey map](docs/screenshots/02-journey-map.png) -->
@@ -124,8 +150,8 @@ You are **Head of Retention** with a **$10,000** budget. Five customers are on y
 <!-- ![Tuning before vs after](docs/screenshots/04-tuning-before-after.png) -->
 <!-- ![Cross-validation](docs/screenshots/05-cross-validation.png) -->
 <!-- ![Prediction tool](docs/screenshots/06-prediction-tool.png) -->
-<!-- ![Retention Challenge](docs/screenshots/07-retention-challenge.png) -->
-<!-- ![Challenge scorecard](docs/screenshots/08-challenge-scorecard.png) -->
+<!-- ![Story game board](docs/screenshots/07-story-game-board.png) -->
+<!-- ![Story game debrief](docs/screenshots/08-story-game-debrief.png) -->
 
 The animation below is committed and renders directly on GitHub. Result tables and charts are generated into `outputs/` by `python main.py`.
 
@@ -288,8 +314,9 @@ flowchart LR
     F --> I[Metrics · ROC · confusion<br/>permutation importance]
     G & H & I --> R[outputs/report.md + CSV/PNG]
     G & H & I & M --> S[Streamlit dashboard]
-    F & H --> GM[Retention Challenge<br/>real test outcomes +<br/>assumed economics]
-    GM --> S
+    F & H --> GM[Story game payload<br/>real test customers +<br/>assumed economics]
+    GM --> J[HTML/JS game<br/>engine.js]
+    J --> S
 ```
 
 \*The scaler is used in the Logistic Regression pipeline only.
@@ -299,7 +326,7 @@ flowchart LR
 - **One model registry** (`churn/models.py::build_models`): add a pipeline there and cross-validation, evaluation, importance, the report and the dashboard pick it up.
 - **Generated, never hand-typed, conclusions:** `churn/insights.py` and `churn/tuning.py` turn measured numbers into sentences labelled *measured* or *explanation*. If the data changes, the text changes with it.
 - **One computation path:** the dashboard (`churn/analysis.py`) uses the same split, pipelines and functions as `main.py`, and a test checks that both report the same numbers.
-- **Games stay honest:** the Retention Challenge engine (`churn/game.py`) is plain, tested Python. It scores real test customers against their real outcomes, and keeps every money assumption in one adjustable `Economics` object.
+- **Games stay honest:** the story game plays with real test customers and real outcomes. Its browser engine (`engine.js`) is pure functions, tested under Node against the Python reference engine (`churn/game.py`), and every money assumption lives in one `Economics` object.
 
 ---
 
@@ -308,7 +335,7 @@ flowchart LR
 ```
 churn_modelling/
 ├── main.py                      # single entry point: the 11-step workflow
-├── app.py                       # Streamlit dashboard (10 sections, incl. the Retention Challenge)
+├── app.py                       # Streamlit dashboard (10 sections, incl. the story game)
 ├── churn_modelling.csv          # dataset (never modified by the code)
 ├── requirements.txt
 ├── pytest.ini
@@ -330,7 +357,11 @@ churn_modelling/
 │   ├── analysis.py              # everything the dashboard computes
 │   ├── glossary.py              # definitions behind every tooltip
 │   ├── animation.py             # renders the gradient-boosting GIF
-│   ├── game.py                  # Retention Challenge engine: personas, outcomes, ROI, scoring, campaigns
+│   ├── game.py                  # story game: personas, game economics, Python reference engine
+│   ├── story_game.py            # story game: real-data payload + HTML rendering
+│   ├── game_assets/
+│   │   ├── game.html            # the interactive game (HTML/CSS/JS, self-contained)
+│   │   └── engine.js            # pure game logic, tested under Node
 │   ├── formatting.py            # the single rounding rule
 │   └── report.py                # writes outputs/report.md
 ├── tests/                       # pytest suite (components, workflow, dashboard)
@@ -350,15 +381,18 @@ churn_modelling/
 python -m pytest
 ```
 
-The suite (87 tests) covers:
+The suite (93 tests) covers:
 
 - **Data:** validation errors for missing files or columns, a non-binary target and missing values; stratification; the absence of identifiers and the target from `X`.
 - **Leakage:** scalers learn training statistics only; CV never fits the pipeline passed in.
 - **Models:** documented settings, class weighting reaching every model, dense preprocessing output, valid probabilities.
 - **Cross-validation and tuning:** fold scores, out-of-fold coverage, grids containing the baselines, baseline candidates reproducing the baseline CV exactly, and save/load round trips of the tuned models.
 - **Workflow:** `main.py` end to end on a synthetic dataset, including every output file and the report sections.
-- **Retention Challenge:** the money outcomes follow the confusion matrix (true positive / false positive / false negative / true negative), the perfect plan beats every alternative within budget, the model's plan skips customers whose expected saving is below cost, personas match their archetypes and are reproducible per round, and model-ranked campaigns beat random targeting.
-- **Dashboard:** headless Streamlit `AppTest` renders all ten sections under every threshold strategy and both class weightings, checks the tooltips and the journey-map navigation, plays a full game round (over-budget blocking, reveal, scorecard, new round), and checks that the tuning page's numbers equal those saved by `main.py`.
+- **Story game:**
+  - Money outcomes follow the confusion matrix, the perfect plan beats every alternative within budget, and personas match their archetypes and are reproducible.
+  - The payload's customers, probabilities, outcomes, thresholds and confusion counts equal the real test-set values, and the rendered page is self-contained.
+  - Every script parses (`node --check`), and **the JavaScript engine reproduces the Python engine** on 25 random weeks and the real at-scale counts.
+- **Dashboard:** headless Streamlit `AppTest` renders all ten sections under every threshold strategy and both class weightings, checks the tooltips and the journey-map navigation, checks that the story game is embedded with this configuration's real data, and checks that the tuning page's numbers equal those saved by `main.py`.
 - **Formatting, glossary and animation:** a single rounding rule, every metric and hyperparameter explained, and the animation's loss behaviour.
 
 Reproducibility: with seed 42, repeated runs of `main.py` produce byte-identical CSV files.
@@ -387,7 +421,7 @@ Reproducibility: with seed 42, repeated runs of `main.py` produce byte-identical
 | Class weighting and CV-based threshold optimisation | ✅ Implemented |
 | GridSearchCV tuning (Random Forest, XGBoost) | ✅ Implemented |
 | Executive briefing, journey map, tooltips, boosting animation | ✅ Implemented |
-| Bank Manager Retention Challenge (mini-game) | ✅ Implemented |
+| The Chief Retention Officer: interactive ML decision story (HTML/JS) | ✅ Implemented |
 | Nested cross-validation for tuning | 🗓️ Planned |
 | Tuning LightGBM and CatBoost | 🗓️ Planned |
 | Probability calibration (`CalibratedClassifierCV`) | 🗓️ Planned |

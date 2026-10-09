@@ -10,9 +10,6 @@ from churn.game import (
     Incentive,
     badge,
     best_plan,
-    campaign,
-    campaign_curve,
-    mood,
     outcomes,
     select_personas,
     success_score,
@@ -58,7 +55,6 @@ def test_score_and_badges():
     assert badge(90, 10)[1] == "Retention Champion"
     assert badge(90, -1)[1] == "Budget Burner"  # losing money is always a defeat
     assert badge(10, 500)[1] == "Cautious Starter"  # a low score with positive net value is not "budget burning"
-    assert mood(0.9, 0.3, 0.2)[1] == "red" and mood(0.25, 0.3, 0.2)[1] == "orange" and mood(0.1, 0.3, 0.2)[1] == "green"
 
 
 def test_personas_are_real_test_customers_matching_their_archetype(small_df):
@@ -84,18 +80,3 @@ def test_personas_are_real_test_customers_matching_their_archetype(small_df):
     for persona, (_, row) in zip(PERSONAS, first.iterrows()):
         assert len(pd.DataFrame([row]).query(persona.rule)) == 1
     assert isinstance(other, pd.DataFrame)
-
-
-def test_campaign_targets_highest_risk_within_budget_and_beats_random():
-    rng = np.random.default_rng(0)
-    truth = rng.uniform(size=500) < 0.2
-    scores = np.clip(truth * 0.6 + rng.uniform(0, 0.4, 500), 0, 1)  # informative scores
-    value = np.full(500, 1000.0)
-    c = campaign(scores, truth, value, ECON, "call", budget=5_000)
-    assert c["model"]["n_targeted"] == 50 and c["model"]["spend"] == 5_000
-    assert c["perfect"]["net"] >= c["model"]["net"] > c["random"]["net"]
-    floor = campaign(scores, truth, value, ECON, "call", budget=1e9, min_risk=0.95)
-    assert floor["model"]["n_targeted"] == int((scores >= 0.95).sum())
-    curve = campaign_curve(scores, truth, value, ECON, "call", max_n=200)
-    assert curve["n"].iloc[0] == 0 and curve["model"].iloc[0] == 0
-    assert (curve["model"] >= curve["random"] - 1e-9).all()

@@ -16,7 +16,7 @@ The main README shows these images once they exist. To add them:
 | `04-tuning-before-after.png` | 4. Hyperparameter Tuning | The KPI row and the *Before vs after* chart. |
 | `05-cross-validation.png` | 5. Cross-Validation & Robustness | The box plot of fold scores. |
 | `06-prediction-tool.png` | 7. Interactive Churn Prediction Tool | A high-risk profile (e.g. age 55, inactive, 3 products, Germany) showing the gauge and the driver chart. |
-| `07-retention-challenge.png` | 9. The Bank Manager Retention Challenge | The five persona cards with a few incentives chosen and the budget meter. |
-| `08-challenge-scorecard.png` | 9. The Bank Manager Retention Challenge | After *Reveal outcomes*: the victory/defeat scorecard and the four KPIs. |
+| `07-story-game-board.png` | 9. The Chief Retention Officer | A week in progress: persona cards with chat bubbles, the model switcher, threshold and HUD. |
+| `08-story-game-debrief.png` | 9. The Chief Retention Officer | After *Reveal*: the debrief with the score ring, KPIs and lessons. |
 
 Keep each image under about 1 MB so the README loads quickly (crop to the relevant area).

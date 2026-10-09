@@ -30,7 +30,7 @@ def _visit_all_pages(app, label):
 
 def test_ten_sections_are_available(app):
     assert len(_pages(app)) == 10
-    assert _pages(app)[9] == "9. The Bank Manager Retention Challenge"
+    assert _pages(app)[9] == "9. The Chief Retention Officer: A Machine Learning Decision Story"
     assert _pages(app)[0].startswith("0. Executive Briefing")  # landing page
     assert "Hyperparameter Tuning" in _pages(app)[4]
 
@@ -114,33 +114,12 @@ def test_briefing_answers_the_three_questions_and_journey_navigates(app):
     assert "Hyperparameter Tuning" in app.title[0].value
 
 
-def test_retention_game_round_trip(app):
-    """Choose incentives, reveal real outcomes, get a scorecard; over-budget plans cannot be revealed."""
-    from churn.game import PERSONAS
-
+def test_story_game_page_embeds_the_interactive_game(app):
+    """Section 9 embeds the self-contained HTML/JS game with this configuration's real data."""
     app.sidebar.radio(key="page").set_value(_pages(app)[9]).run()
     assert not app.exception
-    assert app.session_state["game_round"] == 1 and not app.session_state["game_revealed"]
-    reveal = lambda: next(b for b in app.button if b.key == "game_reveal")
-
-    # Five VIP packages cost more than the budget: reveal is disabled.
-    vip = next(o for o in app.selectbox(key=f"game_1_{PERSONAS[0].key}").options if "VIP" in o)
-    for persona in PERSONAS:
-        app.selectbox(key=f"game_1_{persona.key}").set_value(vip)
-    app.run()
-    assert reveal().disabled and any("Over budget" in e.value for e in app.error)
-
-    app.button(key="game_reset").click().run()
-    app.selectbox(key=f"game_1_{PERSONAS[-1].key}").set_value(vip).run()
-    assert not reveal().disabled
-    reveal().click().run()
-    assert not app.exception and app.session_state["game_revealed"]
-    labels = [m.label for m in app.metric]
-    for kpi in ("✅ True savings", "⚠️ Wasted budget", "❌ Lost revenue", "📈 Net ROI"):
-        assert kpi in labels
-    assert "Success score" in " ".join(m.value for m in app.markdown)
-
-    app.button(key="game_next").click().run()
-    assert app.session_state["game_round"] == 2 and not app.session_state["game_revealed"]
-    app.slider(key="camp_budget").set_value(100_000).run()
-    assert not app.exception
+    frames = [el for el in app.main if getattr(el, "type", None) == "iframe"]
+    assert len(frames) == 1
+    html = frames[0].proto.srcdoc
+    assert "The Chief Retention Officer" in html and "const DATA = {" in html and "Engine" in html
+    assert '"best": "CatBoost"' in html

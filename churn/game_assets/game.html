@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Chief Retention Officer</title>
+<style>
+:root {
+  --bg1: #0b1020; --bg2: #1a1240; --bg3: #0d2a3a;
+  --glass: rgba(255,255,255,0.07); --glass-strong: rgba(255,255,255,0.12); --stroke: rgba(255,255,255,0.16);
+  --text: #f4f6fb; --muted: #aab3c8; --faint: #7d87a0;
+  --red: #ff5d6c; --amber: #ffb547; --green: #3ddc97; --blue: #5aa9ff; --violet: #a68bff;
+  --radius: 18px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: var(--text);
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(90,169,255,0.25), transparent 60%),
+              radial-gradient(900px 500px at 110% 10%, rgba(166,139,255,0.28), transparent 60%),
+              radial-gradient(800px 600px at 50% 120%, rgba(61,220,151,0.16), transparent 60%),
+              linear-gradient(160deg, var(--bg1), var(--bg2) 55%, var(--bg3));
+  min-height: 100vh; padding: 18px; font-size: 15px; line-height: 1.45;
+}
+button { font-family: inherit; }
+.glass { background: var(--glass); border: 1px solid var(--stroke); border-radius: var(--radius);
+         backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
+         box-shadow: 0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08); }
+.screen { display: none; animation: fadeIn .5s ease both; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes pop { 0% { transform: scale(.85); opacity: 0; } 60% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,93,108,.55); } 50% { box-shadow: 0 0 22px 4px rgba(255,93,108,.35); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+@keyframes flip { 0% { transform: rotateY(0); } 50% { transform: rotateY(90deg); } 100% { transform: rotateY(0); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+.eyebrow { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+h1 { font-size: 30px; margin: 6px 0 8px; letter-spacing: -.01em; }
+h2 { font-size: 22px; margin: 4px 0 10px; }
+.lead { color: var(--muted); font-size: 16px; max-width: 900px; }
+.btn { border: 1px solid var(--stroke); background: var(--glass-strong); color: var(--text); padding: 9px 14px;
+       border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; transition: transform .12s, background .2s, box-shadow .2s; }
+.btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn.primary { background: linear-gradient(135deg, #5aa9ff, #a68bff); border-color: transparent; color: #0b1020;
+               box-shadow: 0 6px 24px rgba(122,140,255,.45); }
+.btn.big { padding: 13px 22px; font-size: 16px; border-radius: 14px; }
+.btn.ghost { background: transparent; }
+
+/* ---------- intro ---------- */
+.intro { padding: 30px 34px; max-width: 1080px; margin: 0 auto; }
+.chapter { display: none; animation: fadeIn .45s ease both; }
+.chapter.active { display: block; }
+.chapter-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 26px; align-items: center; margin-top: 10px; }
+.visual { padding: 18px; }
+.dots { display: flex; gap: 8px; margin: 22px 0 0; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.25); }
+.dot.on { background: var(--blue); box-shadow: 0 0 10px var(--blue); }
+.nav { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
+.mini-bar { height: 14px; border-radius: 999px; background: rgba(255,255,255,.1); position: relative; overflow: visible; margin: 8px 0 22px; }
+.mini-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--green), var(--amber), var(--red)); }
+.tick { position: absolute; top: -6px; width: 2px; height: 26px; background: #fff; }
+.tick span { position: absolute; top: 28px; left: 50%; transform: translateX(-50%); font-size: 12px; white-space: nowrap; color: var(--muted); }
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat { padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.06); border: 1px solid var(--stroke); }
+.stat .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.stat .v { font-size: 24px; font-weight: 800; }
+.stat .s { font-size: 12px; color: var(--faint); }
+
+/* ---------- HUD ---------- */
+.hud { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 12px; }
+.hud .cell { padding: 12px 14px; }
+.hud .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.hud .v { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.hud .s { font-size: 12px; color: var(--faint); }
+.hud .v.good { color: var(--green); text-shadow: 0 0 18px rgba(61,220,151,.35); }
+.hud .v.bad { color: var(--red); text-shadow: 0 0 18px rgba(255,93,108,.35); }
+.budget-track { height: 6px; background: rgba(255,255,255,.1); border-radius: 999px; margin-top: 6px; overflow: hidden; }
+.budget-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--violet)); transition: width .35s ease; }
+
+.controls { display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px; margin-bottom: 12px; }
+.panel { padding: 14px 16px; }
+.panel-title { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 700; margin-bottom: 8px; display: flex; justify-content: space-between; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 8px 12px; border-radius: 12px;
+        border: 1px solid var(--stroke); background: rgba(255,255,255,.05); color: var(--text); cursor: pointer; transition: all .2s; min-width: 118px; }
+.chip:hover { background: rgba(255,255,255,.12); }
+.chip .n { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.chip .m { font-size: 11px; color: var(--muted); }
+.chip .sw { width: 9px; height: 9px; border-radius: 50%; }
+.chip.on { border-color: transparent; box-shadow: 0 0 0 2px var(--chip), 0 0 22px -2px var(--chip); background: rgba(255,255,255,.14); }
+.slider-row { display: flex; align-items: center; gap: 12px; }
+input[type=range] { flex: 1; accent-color: var(--violet); height: 26px; }
+.tval { font-size: 22px; font-weight: 800; min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+select { background: rgba(255,255,255,.1); color: var(--text); border: 1px solid var(--stroke); border-radius: 10px; padding: 8px; font-family: inherit; }
+select option { color: #0b1020; }
+.hint { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
+/* ---------- personas ---------- */
+.board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.card { position: relative; padding: 14px 14px 12px; cursor: pointer; transition: transform .2s, box-shadow .3s, border-color .3s; display: flex; flex-direction: column; }
+.card:hover { transform: translateY(-3px); }
+.card.flagged { border-color: rgba(255,93,108,.55); }
+.card.selected { box-shadow: 0 0 0 2px var(--blue), 0 12px 40px rgba(0,0,0,.4); }
+.card.targeted { background: linear-gradient(180deg, rgba(166,139,255,.18), rgba(255,255,255,.06)); }
+.card.flip { animation: flip .6s ease; }
+.card.shake { animation: shake .35s ease; }
+.bubble { position: relative; background: rgba(255,255,255,.92); color: #141a2e; border-radius: 14px; padding: 9px 11px; font-size: 13px;
+          line-height: 1.35; min-height: 56px; margin-bottom: 14px; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+.bubble::after { content: ""; position: absolute; left: 26px; bottom: -8px; border: 8px solid transparent; border-top-color: rgba(255,255,255,.92); border-bottom: 0; }
+.bubble.pop { animation: pop .35s ease; }
+.who { display: flex; gap: 10px; align-items: center; }
+.avatar { width: 54px; height: 54px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 30px;
+          background: rgba(255,255,255,.1); border: 2px solid var(--ring, rgba(255,255,255,.3)); box-shadow: 0 0 16px -2px var(--ring, transparent); transition: all .3s; }
+.name { font-weight: 800; font-size: 16px; }
+.title { font-size: 12px; color: var(--muted); }
+.badge { display: inline-flex; align-items: center; gap: 6px; margin: 10px 0 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: .03em; width: fit-content; }
+.badge.red { background: rgba(255,93,108,.18); color: #ff9aa4; border: 1px solid rgba(255,93,108,.5); animation: pulse 1.8s infinite; }
+.badge.amber { background: rgba(255,181,71,.16); color: #ffd08a; border: 1px solid rgba(255,181,71,.45); }
+.badge.green { background: rgba(61,220,151,.15); color: #86f0c1; border: 1px solid rgba(61,220,151,.45); }
+.risk { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+.risk b { color: var(--text); font-size: 20px; font-variant-numeric: tabular-nums; }
+.bar { position: relative; height: 10px; border-radius: 999px; background: rgba(255,255,255,.1); margin: 6px 0 4px; }
+.fill { height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.2,.8,.2,1), background .3s; }
+.tmark { position: absolute; top: -5px; width: 2px; height: 20px; background: #fff; box-shadow: 0 0 8px #fff; transition: left .3s; }
+.facts { font-size: 12px; color: var(--faint); margin: 6px 0 8px; min-height: 34px; }
+.value { font-size: 12.5px; color: var(--muted); }
+.value b { color: var(--text); }
+.actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: auto; padding-top: 10px; }
+.act { padding: 7px 0; border-radius: 10px; border: 1px solid var(--stroke); background: rgba(255,255,255,.06); color: var(--text); cursor: pointer;
+       font-size: 17px; transition: all .15s; position: relative; }
+.act small { display: block; font-size: 10px; color: var(--muted); }
+.act:hover:not(:disabled) { background: rgba(255,255,255,.16); }
+.act.on { background: linear-gradient(135deg, rgba(90,169,255,.5), rgba(166,139,255,.55)); border-color: transparent; box-shadow: 0 0 14px rgba(166,139,255,.55); }
+.act:disabled { opacity: .3; cursor: not-allowed; }
+.result { margin-top: 10px; padding: 9px 10px; border-radius: 12px; font-size: 12.5px; font-weight: 600; display: none; animation: pop .4s ease both; }
+.result.show { display: block; }
+.result.tp { background: rgba(61,220,151,.16); border: 1px solid rgba(61,220,151,.5); }
+.result.fp { background: rgba(255,181,71,.15); border: 1px solid rgba(255,181,71,.5); }
+.result.fn { background: rgba(255,93,108,.16); border: 1px solid rgba(255,93,108,.5); }
+.result.tn { background: rgba(90,169,255,.13); border: 1px solid rgba(90,169,255,.45); }
+
+.lower { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-top: 12px; }
+.scale-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.scale-grid .stat .v { font-size: 20px; }
+.reveal-wrap { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 16px; }
+
+/* ---------- debrief ---------- */
+.overlay { position: fixed; inset: 0; background: rgba(5,8,18,.72); backdrop-filter: blur(6px); display: none; align-items: flex-start; justify-content: center; padding: 26px 18px; overflow-y: auto; z-index: 10; }
+.overlay.show { display: flex; animation: fadeIn .35s ease both; }
+.debrief { max-width: 1000px; width: 100%; padding: 24px 26px; }
+.verdict { display: flex; gap: 18px; align-items: center; }
+.ring { width: 104px; height: 104px; flex: none; }
+.ring circle { fill: none; stroke-width: 10; }
+.ring .bg { stroke: rgba(255,255,255,.12); }
+.ring .fg { stroke: url(#ringGrad); stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(.2,.8,.2,1); transform: rotate(-90deg); transform-origin: 50% 50%; }
+.ring text { fill: var(--text); font-size: 26px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
+.win { color: var(--green); } .lose { color: var(--red); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+.lessons { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.lessons li { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid var(--stroke); font-size: 14px; }
+.lessons li b { color: #fff; }
+.mbars { display: grid; gap: 8px; margin-top: 6px; }
+.mbar { display: grid; grid-template-columns: 150px 1fr 110px; gap: 10px; align-items: center; font-size: 13px; }
+.mtrack { height: 14px; background: rgba(255,255,255,.08); border-radius: 999px; position: relative; overflow: hidden; }
+.mfill { position: absolute; top: 0; bottom: 0; border-radius: 999px; transition: width .9s ease, left .9s ease; }
+.mzero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: rgba(255,255,255,.5); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.foot { font-size: 12px; color: var(--faint); margin-top: 14px; }
+
+@media (max-width: 1100px) { .board { grid-template-columns: repeat(3, minmax(0,1fr)); } .hud { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px) { .board, .controls, .lower, .chapter-grid, .two, .kpis { grid-template-columns: 1fr; } .hud { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ======================= INTRO STORY ======================= -->
+<section id="intro" class="screen active">
+  <div class="intro glass">
+    <div class="eyebrow">A machine learning decision story</div>
+    <h1>🏦 The Chief Retention Officer</h1>
+    <div id="chapters"></div>
+    <div class="dots" id="dots"></div>
+    <div class="nav">
+      <button class="btn ghost" id="prevCh">← Back</button>
+      <div>
+        <button class="btn ghost" id="skipIntro">Skip story</button>
+        <button class="btn primary big" id="nextCh">Next →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= GAME ======================= -->
+<section id="game" class="screen">
+  <div class="row" style="justify-content: space-between; margin: 0 0 10px;">
+    <div><div class="eyebrow" id="weekLabel">Week 1 of 5</div><h2 style="margin:2px 0 0">Five customers are on your desk</h2></div>
+    <div class="row" style="margin:0"><button class="btn ghost" id="replayStory">📖 Story</button></div>
+  </div>
+
+  <div class="hud">
+    <div class="cell glass"><div class="k">Budget left</div><div class="v" id="hudBudget">$0</div>
+      <div class="budget-track"><div class="budget-fill" id="budgetFill" style="width:0%"></div></div></div>
+    <div class="cell glass"><div class="k">Committed</div><div class="v" id="hudSpend">$0</div><div class="s" id="hudTargets">0 customers targeted</div></div>
+    <div class="cell glass"><div class="k" id="hudSaveK">Model-expected savings</div><div class="v" id="hudSave">$0</div><div class="s" id="hudSaveS">if the model's risks are right</div></div>
+    <div class="cell glass"><div class="k" id="hudRoiK">Expected ROI</div><div class="v" id="hudRoi">–</div><div class="s" id="hudRoiS">(savings − spend) / spend</div></div>
+    <div class="cell glass"><div class="k">Season total</div><div class="v" id="hudSeason">$0</div><div class="s" id="hudSeasonS">net value over revealed weeks</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="panel glass">
+      <div class="panel-title"><span>🧠 Your crystal ball: choose a model</span><span id="modelNote"></span></div>
+      <div class="chips" id="chips"></div>
+      <div class="hint" id="modelHint"></div>
+    </div>
+    <div class="panel glass">
+      <div class="panel-title"><span>🎚️ Decision threshold</span><span id="tOpt"></span></div>
+      <div class="slider-row"><input type="range" id="tSlider" min="0.05" max="0.95" step="0.01"><div class="tval" id="tVal">50%</div></div>
+      <div class="row">
+        <button class="btn" id="tModel">Use model's optimum</button>
+        <button class="btn" id="tDefault">Default 50%</button>
+        <select id="autoInc" aria-label="Incentive for flagged customers"></select>
+        <button class="btn" id="autoTarget">🎯 Target all flagged</button>
+        <button class="btn ghost" id="clearAll">Clear</button>
+      </div>
+      <div class="hint">Customers with risk ≥ threshold are <b>flagged</b> (glowing red). Lower it to catch more churners (Recall ↑), raise it to waste less on loyal ones (Precision ↑).</div>
+    </div>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <div class="lower">
+    <div class="panel glass">
+      <div class="panel-title"><span>🔭 This rule at scale: all <span id="scaleN"></span> test customers</span><span id="scaleIncName"></span></div>
+      <div class="scale-grid" id="scaleGrid"></div>
+      <div class="hint" id="scaleHint"></div>
+    </div>
+    <div class="glass reveal-wrap">
+      <div style="font-weight:700">Ready? Outcomes are the <i>real</i> results of these held-out customers.</div>
+      <button class="btn primary big" id="reveal">🎲 Reveal what happened</button>
+      <div class="hint" id="revealHint">Click a card to talk to the customer, then pick an incentive with the buttons.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= FINAL ======================= -->
+<section id="final" class="screen">
+  <div class="intro glass" id="finalBody"></div>
+</section>
+
+<!-- ======================= DEBRIEF ======================= -->
+<div class="overlay" id="overlay"><div class="debrief glass" id="debrief"></div></div>
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddc97"/><stop offset="1" stop-color="#5aa9ff"/></linearGradient></defs></svg>
+</div>
+
+<script>
+/*__ENGINE__*/
+</script>
+<script>
+(function () {
+"use strict";
+const DATA = /*__PAYLOAD__*/null;
+const E = window.Engine;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const money = (x, signed) => (x < 0 ? "−" : signed && x > 0 ? "+" : "") + "$" + Math.round(Math.abs(x)).toLocaleString("en-US");
+const pct = (x, d = 0) => (100 * x).toFixed(d) + "%";
+const econ = DATA.econ;
+const incById = Object.fromEntries(econ.incentives.map((i) => [i.id, i]));
+const modelByName = Object.fromEntries(DATA.models.map((m) => [m.name, m]));
+const BUDGET = DATA.budget;
+
+const state = {
+  week: 0, model: DATA.best, t: modelByName[DATA.best].threshold, decisions: [], revealed: false,
+  selected: null, history: [], autoInc: "waiver",
+};
+const round = () => DATA.rounds[state.week];
+const customers = () => round().customers;
+const probs = (model = state.model) => customers().map((c) => c.p[model]);
+const values = () => customers().map((c) => c.value);
+const churned = () => customers().map((c) => c.churned);
+
+/* ---------------- tickers ---------------- */
+const tickers = new Map();
+function tick(el, to, fmt) {
+  const from = tickers.get(el)?.to ?? 0;
+  tickers.set(el, { to, fmt });
+  // Animation frames are paused in hidden tabs: show the final value directly there.
+  if (document.hidden) { el.textContent = fmt(to); return; }
+  const t0 = performance.now(), dur = 550;
+  function step(now) {
+    const k = Math.min((now - t0) / dur, 1), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = fmt(from + (to - from) * e);
+    if (k < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) tickers.forEach((v, el) => { el.textContent = v.fmt(v.to); });
+});
+
+/* ---------------- intro story ---------------- */
+function storyChapters() {
+  const best = modelByName[DATA.best];
+  const g = DATA.scale.models[DATA.best];
+  const waiver = incById.waiver;
+  const at50 = E.scaleStats(g, 0.5, waiver), atOpt = E.scaleStats(g, best.threshold, waiver);
+  const lr = DATA.models.find((m) => m.name === "Logistic Regression");
+  return [
+    { title: "Chapter 1 · Your first day",
+      text: `<p class="lead">Congratulations: you are the bank's new <b>Chief Retention Officer</b>. Last year <b>${pct(DATA.base_rate, 1)}</b> of customers walked out of the door, taking their balances and fees with them.</p>
+             <p class="lead">Every week you get <b>${money(BUDGET)}</b> and five customers on your desk. Spend it on calls, fee waivers or VIP packages to keep the ones who are about to leave. But every dollar spent on a customer who was staying anyway is wasted.</p>`,
+      visual: `<div class="compare">${econ.incentives.map((i) => `<div class="stat"><div class="k">${esc(i.icon)} ${esc(i.name)}</div><div class="v">${money(i.cost)}</div><div class="s">${pct(i.success)} chance a would-be churner stays · ${esc(i.blurb)}</div></div>`).join("")}<div class="stat"><div class="k">Your budget</div><div class="v">${money(BUDGET)}</div><div class="s">per week, for ${DATA.rounds.length} weeks</div></div></div>` },
+    { title: "Chapter 2 · Your crystal ball: churn risk probability",
+      text: `<p class="lead">You cannot ask customers whether they plan to leave. But the data science team trained <b>${DATA.models.length} machine learning models</b> on 8,000 past customers. For anyone on your desk, a model returns a <b>churn risk probability</b>: P(customer leaves).</p>
+             <p class="lead">Models are not equally good. Their ranking quality is measured by <b>ROC-AUC</b> (0.5 = coin flip, 1.0 = perfect): ${DATA.models.map((m) => `${esc(m.name)} <b>${m.cv_auc.toFixed(3)}</b>`).join(", ")}. You can switch models live during the game and see your results change.</p>`,
+      visual: `<div class="eyebrow">Example: a customer scored ${pct(0.62)}</div><div class="mini-bar"><div class="mini-fill" style="width:62%"></div></div>
+               <div class="compare"><div class="stat"><div class="k">Best ranker</div><div class="v">${esc(best.name)}</div><div class="s">CV ROC-AUC ${best.cv_auc.toFixed(3)}</div></div>
+               <div class="stat"><div class="k">Linear baseline</div><div class="v">${lr ? esc(lr.name.replace("Logistic Regression", "Log. Regression")) : "–"}</div><div class="s">CV ROC-AUC ${lr ? lr.cv_auc.toFixed(3) : "–"}</div></div></div>` },
+    { title: "Chapter 3 · Your rule: the decision threshold",
+      text: `<p class="lead">A probability is not a decision. You need a rule: <b>flag a customer when risk ≥ threshold</b>. The textbook default is 50%. But with only one churner in five, ${esc(best.name)} rarely gets that sure, and a 50% rule misses many leavers.</p>
+             <p class="lead">Using cross-validation on training data only, the team found that <b>${pct(best.threshold)}</b> balances catches and false alarms best for ${esc(best.name)}. On all ${DATA.scale.n.toLocaleString()} test customers:</p>`,
+      visual: `<div class="mini-bar"><div class="mini-fill" style="width:100%; opacity:.35"></div><div class="tick" style="left:${best.threshold * 100}%"><span>${pct(best.threshold)}</span></div><div class="tick" style="left:50%"><span>50%</span></div></div>
+               <div class="compare"><div class="stat"><div class="k">Threshold 50%</div><div class="v">${pct(at50.recall)}</div><div class="s">of churners caught (Recall) · ${pct(at50.precision)} of flags correct (Precision)</div></div>
+               <div class="stat"><div class="k">Threshold ${pct(best.threshold)}</div><div class="v">${pct(atOpt.recall)}</div><div class="s">of churners caught (Recall) · ${pct(atOpt.precision)} of flags correct (Precision)</div></div></div>` },
+    { title: "Chapter 4 · The trade-off you will live with",
+      text: `<p class="lead"><b>Precision</b> asks: of the customers I spent money on, how many were really leaving? Low precision = <b>wasted budget</b> on loyal customers (false positives).</p>
+             <p class="lead"><b>Recall</b> asks: of the customers who left, how many did I reach? Low recall = <b>lost revenue</b> from churners nobody called (false negatives).</p>
+             <p class="lead">Lowering the threshold trades one for the other. Your job: find the balance that makes money. Each week ends with a debrief that shows what the data really said.</p>`,
+      visual: `<div class="compare"><div class="stat"><div class="k">⚠️ False positive</div><div class="v" style="color:var(--amber)">Wasted</div><div class="s">You paid a loyal customer who was staying anyway.</div></div>
+               <div class="stat"><div class="k">❌ False negative</div><div class="v" style="color:var(--red)">Lost</div><div class="s">A churner left and nobody tried to keep them.</div></div>
+               <div class="stat"><div class="k">✅ True positive</div><div class="v" style="color:var(--green)">Saved</div><div class="s">You reached a churner; the incentive may keep them.</div></div>
+               <div class="stat"><div class="k">👍 True negative</div><div class="v" style="color:var(--blue)">Fine</div><div class="s">A loyal customer, correctly left alone.</div></div></div>` },
+  ];
+}
+let chapter = 0;
+function renderStory() {
+  const chs = storyChapters();
+  $("chapters").innerHTML = chs.map((c, i) => `<div class="chapter ${i === chapter ? "active" : ""}"><h2>${c.title}</h2>
+      <div class="chapter-grid"><div>${c.text}</div><div class="visual glass">${c.visual}</div></div></div>`).join("");
+  $("dots").innerHTML = chs.map((_, i) => `<div class="dot ${i === chapter ? "on" : ""}"></div>`).join("");
+  $("prevCh").disabled = chapter === 0;
+  $("nextCh").textContent = chapter === chs.length - 1 ? "Start week 1 →" : "Next →";
+}
+function show(id) { document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === id)); window.scrollTo(0, 0); }
+$("prevCh").onclick = () => { chapter = Math.max(0, chapter - 1); renderStory(); };
+$("nextCh").onclick = () => { if (chapter < 3) { chapter++; renderStory(); } else { show("game"); } };
+$("skipIntro").onclick = () => show("game");
+$("replayStory").onclick = () => { chapter = 0; renderStory(); show("intro"); };
+
+/* ---------------- game board ---------------- */
+function riskState(p) {
+  if (p >= state.t) return ["red", "😠 HIGH RISK"];
+  if (p >= DATA.base_rate) return ["amber", "😐 WAVERING"];
+  return ["green", "😊 LOYAL"];
+}
+function riskColor(p) { return p >= state.t ? "var(--red)" : p >= DATA.base_rate ? "var(--amber)" : "var(--green)"; }
+
+function renderChips() {
+  $("chips").innerHTML = DATA.models.map((m) => `<button class="chip ${m.name === state.model ? "on" : ""}" style="--chip:${m.color}" data-model="${esc(m.name)}">
+      <span class="n"><span class="sw" style="background:${m.color}"></span>${esc(m.name)}${m.name === DATA.best ? " ⭐" : ""}</span>
+      <span class="m">ROC-AUC ${m.cv_auc.toFixed(3)} · optimum ${pct(m.threshold)}</span></button>`).join("");
+  document.querySelectorAll(".chip").forEach((b) => b.onclick = () => switchModel(b.dataset.model));
+  const m = modelByName[state.model];
+  $("modelHint").innerHTML = `${esc(m.name)} ranks a random churner above a random loyal customer <b>${pct(m.cv_auc)}</b> of the time (cross-validated). ⭐ = selected by cross-validation.`;
+}
+function switchModel(name) {
+  const keepCustom = Math.abs(state.t - modelByName[state.model].threshold) > 1e-9;
+  state.model = name;
+  if (!keepCustom) state.t = modelByName[name].threshold;
+  $("tSlider").value = state.t;
+  renderChips(); updateBoard(true); updateScale();
+}
+
+function buildBoard() {
+  $("board").innerHTML = customers().map((c, i) => `
+    <div class="card glass" id="card${i}" data-i="${i}" tabindex="0" role="button" aria-label="${esc(c.name)}, ${esc(c.title)}">
+      <div class="bubble" id="bub${i}">${esc(c.lines.idle)}</div>
+      <div class="who"><div class="avatar" id="av${i}">${c.avatar}</div>
+        <div><div class="name">${esc(c.name)}</div><div class="title">${esc(c.title)}</div></div></div>
+      <div class="badge" id="badge${i}"></div>
+      <div class="risk"><span>Churn risk</span><b id="rp${i}">0%</b></div>
+      <div class="bar"><div class="fill" id="fill${i}"></div><div class="tmark" id="tm${i}"></div></div>
+      <div class="facts">Age ${c.age} · ${esc(c.geo)} · ${c.products} product${c.products > 1 ? "s" : ""} · ${c.active ? "active" : "inactive"} · ${c.tenure} yrs<br>Balance $${Math.round(c.balance).toLocaleString("en-US")}</div>
+      <div class="value">Value at stake <b>${money(c.value)}</b></div>
+      <div class="actions" id="acts${i}">
+        <button class="act" data-inc="none" title="No action">🚫<small>none</small></button>
+        ${econ.incentives.map((inc) => `<button class="act" data-inc="${inc.id}" title="${esc(inc.name)}: ${money(inc.cost)}, ${pct(inc.success)} success">${inc.icon}<small>${money(inc.cost)}</small></button>`).join("")}
+      </div>
+      <div class="result" id="res${i}"></div>
+    </div>`).join("");
+  customers().forEach((c, i) => {
+    const card = $("card" + i);
+    card.onclick = (ev) => {
+      const btn = ev.target.closest(".act");
+      if (btn) { choose(i, btn.dataset.inc); return; }
+      select(i);
+    };
+    card.onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select(i); } };
+  });
+}
+function say(i, text) {
+  const b = $("bub" + i);
+  b.textContent = text;
+  b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+}
+function select(i) {
+  if (state.revealed) return;
+  state.selected = i;
+  document.querySelectorAll(".card").forEach((c) => c.classList.toggle("selected", Number(c.dataset.i) === i));
+  say(i, customers()[i].lines.click);
+}
+function choose(i, inc) {
+  if (state.revealed) return;
+  const next = state.decisions.slice(); next[i] = inc;
+  if (E.spend(next, econ) > BUDGET + 1e-9) {
+    const card = $("card" + i); card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+    say(i, "Over budget! Free up money elsewhere first.");
+    return;
+  }
+  state.decisions = next;
+  say(i, inc === "none" ? customers()[i].lines.idle : customers()[i].lines[inc]);
+  updateBoard(false); updateHud();
+}
+function updateBoard(fromModelSwitch) {
+  const ps = probs();
+  customers().forEach((c, i) => {
+    const p = ps[i], [cls, label] = riskState(p), card = $("card" + i);
+    card.classList.toggle("flagged", p >= state.t);
+    card.classList.toggle("targeted", state.decisions[i] !== "none");
+    const badge = $("badge" + i); badge.className = "badge " + cls; badge.textContent = label;
+    $("av" + i).style.setProperty("--ring", riskColor(p));
+    $("fill" + i).style.width = pct(p, 1); $("fill" + i).style.background = riskColor(p);
+    $("tm" + i).style.left = pct(state.t, 1);
+    tick($("rp" + i), p * 100, (v) => Math.round(v) + "%");
+    $("acts" + i).querySelectorAll(".act").forEach((b) => {
+      b.classList.toggle("on", b.dataset.inc === state.decisions[i]);
+      b.disabled = state.revealed;
+    });
+  });
+  $("tVal").textContent = pct(state.t);
+  $("tOpt").textContent = `${state.model} optimum: ${pct(modelByName[state.model].threshold)}`;
+}
+function updateHud() {
+  const spent = E.spend(state.decisions, econ);
+  tick($("hudBudget"), BUDGET - spent, (v) => money(v));
+  $("budgetFill").style.width = pct(spent / BUDGET, 1);
+  tick($("hudSpend"), spent, (v) => money(v));
+  const n = state.decisions.filter((d) => d !== "none").length;
+  $("hudTargets").textContent = `${n} customer${n === 1 ? "" : "s"} targeted`;
+  if (!state.revealed) {
+    const exp = state.decisions.reduce((s, d, i) => s + probs()[i] * E.incentiveById(econ, d).success * values()[i], 0);
+    $("hudSaveK").textContent = "Model-expected savings"; $("hudSaveS").textContent = `if ${state.model}'s risks are right`;
+    tick($("hudSave"), exp, (v) => money(v));
+    $("hudRoiK").textContent = "Expected ROI";
+    const roi = spent ? (exp - spent) / spent : null;
+    $("hudRoi").textContent = roi === null ? "–" : (roi >= 0 ? "+" : "") + pct(roi);
+    $("hudRoi").className = "v " + (roi === null ? "" : roi >= 0 ? "good" : "bad");
+  }
+  const season = state.history.reduce((s, h) => s + h.you.net, 0);
+  tick($("hudSeason"), season, (v) => money(v, true));
+  $("hudSeason").className = "v " + (season > 0 ? "good" : season < 0 ? "bad" : "");
+}
+function updateScale() {
+  const inc = incById[state.autoInc];
+  const s = E.scaleStats(DATA.scale.models[state.model], state.t, inc);
+  $("scaleN").textContent = DATA.scale.n.toLocaleString("en-US");
+  $("scaleIncName").textContent = `${inc.icon} ${inc.name} for every flagged customer`;
+  const cells = [
+    ["Flagged", s.flagged.toLocaleString("en-US"), `${s.tp} churners + ${s.fp} loyal`],
+    ["Recall", pct(s.recall), `${s.tp} of ${s.tp + s.fn} churners caught`],
+    ["Precision", pct(s.precision), `${s.tp} of ${s.flagged} flags correct`],
+    ["Wasted (FP)", money(s.wasted), `${s.fp} loyal customers paid`],
+    ["Missed (FN)", s.fn.toLocaleString("en-US"), `churners never contacted`],
+    ["Net value", money(s.net, true), `savings ${money(s.savings)} − spend ${money(s.spend)}`],
+  ];
+  $("scaleGrid").innerHTML = cells.map(([k, v, sub], i) => `<div class="stat"><div class="k">${k}</div><div class="v" style="${i === 5 ? `color:${s.net >= 0 ? "var(--green)" : "var(--red)"}` : ""}">${v}</div><div class="s">${sub}</div></div>`).join("");
+  $("scaleHint").textContent = `Real test-set counts for ${state.model} at threshold ${pct(s.threshold)}. Move the slider or switch model and watch Precision and Recall trade places.`;
+}
+
+$("tSlider").oninput = (e) => { state.t = Number(e.target.value); updateBoard(false); updateScale(); };
+$("tModel").onclick = () => { state.t = modelByName[state.model].threshold; $("tSlider").value = state.t; updateBoard(false); updateScale(); };
+$("tDefault").onclick = () => { state.t = 0.5; $("tSlider").value = 0.5; updateBoard(false); updateScale(); };
+$("autoInc").innerHTML = econ.incentives.map((i) => `<option value="${i.id}" ${i.id === state.autoInc ? "selected" : ""}>${i.icon} ${esc(i.name)} (${money(i.cost)})</option>`).join("");
+$("autoInc").onchange = (e) => { state.autoInc = e.target.value; updateScale(); };
+$("autoTarget").onclick = () => {
+  if (state.revealed) return;
+  const ps = probs(), next = ps.map((p) => (p >= state.t ? state.autoInc : "none"));
+  // Highest risk first if the budget cannot cover everyone flagged.
+  const order = ps.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).map((x) => x[1]);
+  const plan = new Array(ps.length).fill("none"); let spent = 0;
+  for (const i of order) { const c = E.incentiveById(econ, next[i]).cost; if (next[i] !== "none" && spent + c <= BUDGET) { plan[i] = next[i]; spent += c; } }
+  state.decisions = plan;
+  plan.forEach((d, i) => say(i, d === "none" ? customers()[i].lines.idle : customers()[i].lines[d]));
+  updateBoard(false); updateHud();
+};
+$("clearAll").onclick = () => { if (state.revealed) return; state.decisions = customers().map(() => "none"); customers().forEach((c, i) => say(i, c.lines.idle)); updateBoard(false); updateHud(); };
+
+/* ---------------- reveal & debrief ---------------- */
+function lessons(you, ctx) {
+  const L = [], cs = customers(), ps = probs(ctx.model), t = ctx.t;
+  const missedByRule = cs.filter((c, i) => c.churned && ps[i] < t);
+  if (missedByRule.length) {
+    const lowest = Math.min(...missedByRule.map((c) => c.p[ctx.model]));
+    L.push(`🎚️ <b>Your threshold (${pct(t)}) was too strict for ${missedByRule.map((c) => esc(c.name)).join(", ")}</b>: scored ${missedByRule.map((c) => pct(c.p[ctx.model])).join(", ")}, but left. A threshold at or below ${pct(Math.floor(lowest * 100) / 100)} would have flagged ${missedByRule.length > 1 ? "all of them" : "this customer"}. That is Recall: churners slip through when the bar is too high.`);
+  }
+  const falseFlags = cs.filter((c, i) => !c.churned && ps[i] >= t);
+  if (falseFlags.length) L.push(`🎯 <b>${falseFlags.map((c) => esc(c.name)).join(", ")} ${falseFlags.length > 1 ? "were" : "was"} flagged but stayed.</b> That is the Precision cost of your threshold: alarms on loyal customers.`);
+  const fp = cs.filter((c, i) => state.decisions[i] !== "none" && !c.churned);
+  if (fp.length) L.push(`⚠️ <b>${money(you.wasted)} wasted</b> on ${fp.map((c) => esc(c.name)).join(", ")}: false positives, incentives for customers who were staying anyway.`);
+  const fn = cs.filter((c, i) => state.decisions[i] === "none" && c.churned);
+  if (fn.length) L.push(`❌ <b>${money(fn.reduce((s, c) => s + c.value, 0))} lost</b> because ${fn.map((c) => esc(c.name)).join(", ")} left without any retention attempt: false negatives.`);
+  // Model choice, this week: each model's own expected-value plan, scored on the real outcomes.
+  const roundNets = DATA.models.map((m) => [m.name, E.summarise(E.bestPlan(probs(m.name), values(), econ, BUDGET), churned(), values(), econ).net]);
+  const cur = roundNets.find((r) => r[0] === ctx.model)[1];
+  const top = roundNets.reduce((a, b) => (b[1] > a[1] ? b : a));
+  if (top[0] !== ctx.model && top[1] - cur > 0.5) L.push(`🧠 <b>Model choice this week:</b> following ${esc(top[0])}'s risks would have earned ${money(top[1] - cur)} more than following ${esc(ctx.model)}'s.`);
+  else L.push(`🧠 <b>Your model choice paid off this week:</b> no other model's plan beat ${esc(ctx.model)}'s (${money(cur, true)}).`);
+  // Model choice, at scale: each model at its own optimum, same incentive.
+  const inc = incById[state.autoInc];
+  const scaleNet = DATA.models.map((m) => [m.name, E.scaleStats(DATA.scale.models[m.name], m.threshold, inc).net]);
+  const worst = scaleNet.reduce((a, b) => (b[1] < a[1] ? b : a)), best = scaleNet.reduce((a, b) => (b[1] > a[1] ? b : a));
+  L.push(`📊 <b>At scale, models matter:</b> a ${esc(inc.name.toLowerCase())} campaign across ${DATA.scale.n.toLocaleString()} customers earns ${money(best[1], true)} with ${esc(best[0])} but ${money(worst[1], true)} with ${esc(worst[0])}, each at its optimal threshold. One week of five customers is noisy; thousands of decisions are not.`);
+  return L;
+}
+function reveal() {
+  if (state.revealed) return;
+  state.revealed = true;
+  const ctx = { model: state.model, t: state.t };
+  const cs = customers(), v = values(), ch = churned();
+  const you = E.summarise(state.decisions, ch, v, econ);
+  const modelPlan = E.bestPlan(probs(), v, econ, BUDGET);
+  const perfectPlan = E.bestPlan(ch.map((x) => (x ? 1 : 0)), v, econ, BUDGET);
+  const modelRes = E.summarise(modelPlan, ch, v, econ), perfect = E.summarise(perfectPlan, ch, v, econ);
+  const score = E.successScore(you.net, perfect.net);
+  const [icon, title, message] = E.badge(score, you.net);
+  const entry = { week: state.week + 1, you, modelRes, perfect, score, title, icon, model: ctx.model, t: ctx.t, lessons: lessons(you, ctx) };
+  state.history.push(entry);
+
+  cs.forEach((c, i) => setTimeout(() => {
+    const card = $("card" + i), res = $("res" + i), d = state.decisions[i], o = E.outcome(d, c.churned, c.value, econ);
+    card.classList.remove("flip"); void card.offsetWidth; card.classList.add("flip");
+    let cls, text;
+    if (c.churned && d !== "none") { cls = "tp"; text = `🚪 Was leaving · ✅ reached in time: expected saving ${money(o.true_savings)}`; say(i, c.lines.left_targeted); }
+    else if (c.churned) { cls = "fn"; text = `🚪 Left the bank · ❌ missed: lost ${money(o.lost_revenue)}`; say(i, c.lines.left); }
+    else if (d !== "none") { cls = "fp"; text = `🏠 Was staying · ⚠️ ${money(o.wasted)} wasted`; say(i, c.lines.stay_targeted); }
+    else { cls = "tn"; text = "🏠 Stayed · 👍 correctly left alone"; say(i, c.lines.stay); }
+    res.className = "result show " + cls; res.textContent = text;
+  }, 260 * i));
+
+  setTimeout(() => {
+    $("hudSaveK").textContent = "✅ Real savings"; $("hudSaveS").textContent = `wasted ${money(you.wasted)} · lost ${money(you.lost_revenue)}`;
+    tick($("hudSave"), you.true_savings, (x) => money(x));
+    $("hudRoiK").textContent = "📈 Real ROI"; $("hudRoiS").textContent = `net ${money(you.net, true)}`;
+    $("hudRoi").textContent = you.spend ? (you.roi >= 0 ? "+" : "") + pct(you.roi) : "n/a";
+    $("hudRoi").className = "v " + (you.net >= 0 ? "good" : "bad");
+    updateBoard(false); updateHud();
+    $("reveal").textContent = "📋 Open the debrief"; $("reveal").onclick = () => openDebrief(entry, icon, title, message);
+    $("revealHint").textContent = "Outcomes revealed. Open the debrief for the lessons of the week.";
+  }, 260 * cs.length + 250);
+  setTimeout(() => openDebrief(entry, icon, title, message), 260 * cs.length + 900);
+}
+function bars(rows) {
+  const max = Math.max(1, ...rows.map((r) => Math.abs(r[1])));
+  const hasNeg = rows.some((r) => r[1] < 0), zero = hasNeg ? 50 : 0, span = hasNeg ? 50 : 100;
+  return `<div class="mbars">${rows.map(([name, v, color]) => {
+    const w = (Math.abs(v) / max) * span, left = v >= 0 ? zero : zero - w;
+    return `<div class="mbar"><span>${esc(name)}</span><div class="mtrack">${hasNeg ? `<div class="mzero" style="left:${zero}%"></div>` : ""}<div class="mfill" style="left:${left}%; width:0; background:${color}" data-w="${w}"></div></div><b style="text-align:right">${money(v, true)}</b></div>`;
+  }).join("")}</div>`;
+}
+function openDebrief(entry, icon, title, message) {
+  const won = entry.you.net > 0 && entry.score >= 60, last = state.week === DATA.rounds.length - 1;
+  const roundNets = DATA.models.map((m) => [m.name, E.summarise(E.bestPlan(probs(m.name), values(), econ, BUDGET), churned(), values(), econ).net, m.color]);
+  const C = 2 * Math.PI * 42;
+  $("debrief").innerHTML = `
+    <div class="eyebrow">Week ${entry.week} debrief · model ${esc(entry.model)} · threshold ${pct(entry.t)}</div>
+    <div class="verdict">
+      <svg class="ring" viewBox="0 0 104 104"><circle class="bg" cx="52" cy="52" r="42"/><circle class="fg" id="ringFg" cx="52" cy="52" r="42" stroke-dasharray="${C}" stroke-dashoffset="${C}"/><text x="52" y="52">${entry.score}</text></svg>
+      <div><h2 class="${won ? "win" : "lose"}" style="margin:0">${won ? "Victory" : "Defeat"} · ${icon} ${esc(title)}</h2>
+        <div class="lead" style="font-size:15px">${esc(message)} Success score ${entry.score}/100 = your net value as a share of the best achievable this week.</div></div>
+    </div>
+    <div class="kpis">
+      <div class="stat"><div class="k">✅ True savings</div><div class="v" style="color:var(--green)">${money(entry.you.true_savings)}</div><div class="s">churners reached × success × value</div></div>
+      <div class="stat"><div class="k">⚠️ Wasted budget</div><div class="v" style="color:var(--amber)">${money(entry.you.wasted)}</div><div class="s">false positives</div></div>
+      <div class="stat"><div class="k">❌ Lost revenue</div><div class="v" style="color:var(--red)">${money(entry.you.lost_revenue)}</div><div class="s">missed churners + failed incentives</div></div>
+      <div class="stat"><div class="k">📈 Net ROI</div><div class="v" style="color:${entry.you.net >= 0 ? "var(--green)" : "var(--red)"}">${entry.you.spend ? (entry.you.roi >= 0 ? "+" : "") + pct(entry.you.roi) : "n/a"}</div><div class="s">net ${money(entry.you.net, true)}</div></div>
+    </div>
+    <div class="two">
+      <div><div class="panel-title"><span>What the week teaches</span></div><ul class="lessons">${entry.lessons.map((l) => `<li>${l}</li>`).join("")}</ul></div>
+      <div>
+        <div class="panel-title"><span>You vs the benchmarks (this week)</span></div>
+        ${bars([["You", entry.you.net, "#5aa9ff"], [`${entry.model}'s plan`, entry.modelRes.net, modelByName[entry.model].color], ["Perfect hindsight", entry.perfect.net, "#8a8984"]])}
+        <div class="panel-title" style="margin-top:16px"><span>Every model's own plan, real outcomes</span></div>
+        ${bars(roundNets)}
+        <div class="foot">A model's plan maximises expected value from its own risk scores within the budget. Hindsight knows who left.</div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end; margin-top:16px">
+      <button class="btn ghost" id="closeDeb">Back to the board</button>
+      <button class="btn primary big" id="nextWeek">${last ? "🏁 See your final report" : "Next week →"}</button>
+    </div>`;
+  $("overlay").classList.add("show");
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $("ringFg").style.strokeDashoffset = C * (1 - entry.score / 100);
+    document.querySelectorAll(".mfill").forEach((f) => (f.style.width = f.dataset.w + "%"));
+  }));
+  $("closeDeb").onclick = () => $("overlay").classList.remove("show");
+  $("nextWeek").onclick = () => { $("overlay").classList.remove("show"); last ? finalReport() : startWeek(state.week + 1); };
+}
+function finalReport() {
+  const H = state.history, net = H.reduce((s, h) => s + h.you.net, 0), avg = Math.round(H.reduce((s, h) => s + h.score, 0) / H.length);
+  const perfect = H.reduce((s, h) => s + h.perfect.net, 0), model = H.reduce((s, h) => s + h.modelRes.net, 0);
+  const wasted = H.reduce((s, h) => s + h.you.wasted, 0), lost = H.reduce((s, h) => s + h.you.lost_revenue, 0);
+  const [icon, title, message] = E.badge(avg, net);
+  $("finalBody").innerHTML = `
+    <div class="eyebrow">Season report · ${H.length} weeks</div>
+    <h1>${icon} ${esc(title)}</h1>
+    <p class="lead">${esc(message)} Average success score <b>${avg}/100</b>.</p>
+    <div class="kpis">
+      <div class="stat"><div class="k">Your net value</div><div class="v" style="color:${net >= 0 ? "var(--green)" : "var(--red)"}">${money(net, true)}</div><div class="s">over ${H.length} weeks</div></div>
+      <div class="stat"><div class="k">Following the models</div><div class="v">${money(model, true)}</div><div class="s">each week's chosen model's plan</div></div>
+      <div class="stat"><div class="k">Perfect hindsight</div><div class="v">${money(perfect, true)}</div><div class="s">the ceiling</div></div>
+      <div class="stat"><div class="k">Wasted · lost</div><div class="v" style="font-size:19px">${money(wasted)} · ${money(lost)}</div><div class="s">false positives · false negatives</div></div>
+    </div>
+    <div class="panel-title"><span>Five things a Chief Retention Officer now knows</span></div>
+    <ul class="lessons">
+      <li>📈 <b>A churn probability is a ranking, not a verdict.</b> Better models (higher ROC-AUC) put real churners nearer the top, so the same budget reaches more of them.</li>
+      <li>🎚️ <b>The threshold is a business decision.</b> 50% is a convention; with ~20% churners, a lower, cross-validated threshold catches far more leavers.</li>
+      <li>⚖️ <b>Precision protects the budget, Recall protects revenue.</b> You cannot maximise both; choose the trade-off that makes money.</li>
+      <li>🎲 <b>Five customers are noise, two thousand are evidence.</b> Judge models on cross-validation and at scale, not on one lucky week.</li>
+      <li>🧪 <b>Never tune on the test set.</b> These outcomes come from held-out customers the models never saw, which is why they are believable.</li>
+    </ul>
+    <div class="row" style="justify-content:flex-end; margin-top:16px"><button class="btn primary big" id="again">🔁 Play again</button></div>`;
+  show("final");
+  $("again").onclick = () => { state.history = []; startWeek(0); show("game"); };
+}
+function startWeek(w) {
+  state.week = w; state.revealed = false; state.selected = null;
+  state.decisions = customers().map(() => "none");
+  $("weekLabel").textContent = `Week ${w + 1} of ${DATA.rounds.length}`;
+  $("reveal").textContent = "🎲 Reveal what happened"; $("reveal").onclick = reveal;
+  $("revealHint").textContent = "Click a card to talk to the customer, then pick an incentive with the buttons.";
+  buildBoard(); renderChips(); updateBoard(false); updateHud(); updateScale();
+  $("tSlider").value = state.t;
+}
+
+renderStory();
+startWeek(0);
+window.__game = { state, reveal, choose, switchModel, startWeek, DATA };  // for automated checks
+})();
+</script>
+</body>
+</html>
