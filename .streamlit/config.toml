@@ -1,0 +1,12 @@
+# Project-level Streamlit settings (read automatically by `streamlit run app.py`
+# when run from this folder). Command-line flags still override these values.
+
+[server]
+# Serve on this computer only, at http://localhost:8501/
+address = "localhost"
+port = 8501
+
+[browser]
+serverAddress = "localhost"
+serverPort = 8501
+gatherUsageStats = false
