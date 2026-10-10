@@ -1,5 +1,11 @@
 # Bank Customer Churn Prediction
 
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://churn-prediction-game.streamlit.app/)
+
+### 🚀 [Try the live app: churn-prediction-game.streamlit.app](https://churn-prediction-game.streamlit.app/)
+
+The interactive dashboard and *The Chief Retention Officer* game, in English and Hebrew, with no installation needed.
+
 **English** · [עברית](README_HE.md)
 
 **Predicting which bank customers will leave, using five machine-learning models, rigorous cross-validation and hyperparameter tuning, explained through an interactive analytics dashboard and an immersive decision-story game.**

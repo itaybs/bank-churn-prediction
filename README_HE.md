@@ -1,5 +1,11 @@
 # חיזוי נטישת לקוחות בנק
 
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://churn-prediction-game.streamlit.app/)
+
+### 🚀 [לאפליקציה החיה: churn-prediction-game.streamlit.app](https://churn-prediction-game.streamlit.app/)
+
+לוח הבקרה האינטראקטיבי ומשחק *מנהלי השימור*, באנגלית ובעברית, בלי שום התקנה. לעברית בוחרים **עברית** בראש סרגל הצד.
+
 [English](README.md) · **עברית**
 
 **חיזוי אילו לקוחות בנק עומדים לעזוב בעזרת חמישה מודלים של למידת מכונה, אימות צולב קפדני וכוונון היפר-פרמטרים. התוצאות מוסברות בלוח בקרה אינטראקטיבי ובמשחק החלטות סיפורי.**
