@@ -34,7 +34,7 @@
 
 1. [Executive summary](#1-executive-summary)
 2. [Quick start](#2-quick-start)
-3. [Dashboard tour](#3-dashboard-tour) · [⭐ The Chief Retention Officer](#the-chief-retention-officer-interactive-decision-story) · [🎮 How to play](#how-to-play-step-by-step) · [🌐 English and Hebrew](#english-and-hebrew)
+3. [Dashboard tour](#3-dashboard-tour) · [⭐ The Chief Retention Officer](#the-chief-retention-officer-interactive-decision-story) · [🎮 How to play](#how-to-play-step-by-step) · [🏆 How to succeed](#how-to-succeed-the-winning-strategy) · [🌐 English and Hebrew](#english-and-hebrew)
 4. [Results](#4-results)
 5. [Methodology and theory](#5-methodology-and-theory)
 6. [Architecture](#6-architecture)
@@ -150,6 +150,30 @@ Every section was audited in headless Chrome at 360, 390, 768, 1024 and 1440 px,
 - With about one churner in five, **a 50% threshold misses many leavers**. Start from the model's optimum (around 28–34%).
 - Expensive incentives pay off only on customers who are likely to leave. A VIP package for a 10%-risk customer is usually wasted.
 - One week of five customers is noisy: a weaker model can win a single week. The at-scale panel and the season total show which choices hold up.
+
+### How to succeed: the winning strategy
+
+The success score (0–100) measures how much of the net value that perfect hindsight would have achieved you captured. To score high, think like the model: **for each customer, multiply the churn risk by the value at stake**. The result, E = P(churn) × value, is the **expected value at risk**. An incentive pays off only when its expected saving, success × E, exceeds its cost.
+
+With the game's default economics this becomes a simple rule:
+
+| Expected value at risk (E = P × value) | Best move | Why |
+|---|---|---|
+| below $2,000 | 🚫 no action | Even a call ($500, 25%) returns less than it costs: 0.25 × E < $500. |
+| $2,000 – $6,667 | 📞 personal call | The cheapest option, and already profitable. |
+| $6,667 – $10,000 | 💳 fee waiver | Its extra 15 percentage points of success are worth more than its extra $1,000 cost. |
+| above $10,000 | 👑 VIP package | Only when both the risk and the value are very high. |
+
+**Example:** a customer with 79% risk and $7,504 at stake has E ≈ $5,900, so the best move is a personal call. A customer with 97% risk and $9,010 at stake has E ≈ $8,700, so a fee waiver. For a customer with 7% risk, any offer is wasted.
+
+**Five more winning habits:**
+1. **Start with the best model** (⭐, chosen by cross-validated ROC-AUC). A better ranker puts the real churners at the top.
+2. **Don't leave the threshold at 50%.** Press *Use model's optimum* (around 28–34%), and check in the at-scale panel that Recall went up without Precision collapsing.
+3. **The budget is capped at $10,000:** if you can't fund everyone, fund the highest-E customers first.
+4. **Avoid "Target all flagged" with VIP.** A VIP package for everyone above the threshold overspends on lower-value customers. A cheaper incentive for all, or choosing by the table, pays better.
+5. **Compare yourself with the model's plan in the debrief.** The model's plan applies exactly this rule within the budget. If it beat you, look for where you departed from it.
+
+And remember: a correct decision can still lose a single week, because a 30%-risk customer sometimes does leave. Over five weeks, and in the at-scale panel on 2,000 customers, the rule wins.
 
 **What is real and what is assumed.**
 - **Real:** every persona is a real customer from the held-out test set, drawn at random from an archetype with a fixed seed per week (never chosen by score or outcome). Each customer's five model probabilities and their real outcome come from the test set, as do the confusion counts behind the at-scale panel.
@@ -298,6 +322,12 @@ All metrics treat `Exited = 1` as the positive class (TP = churner correctly fla
 | F1 | 2 · P · R / (P + R) | Are Precision and Recall *both* good? |
 | Accuracy | (TP + TN) / all | Supplementary only: predicting "stays" for everyone already scores ~0.80. |
 | ROC-AUC | area under TPR vs FPR | The probability that a random churner is scored above a random non-churner (0.5 = coin flip, 1.0 = perfect). Threshold-free. |
+
+**Decision threshold.** A model returns a probability, P(churn), not a decision. The threshold t turns it into one: **a customer is flagged when P(churn) ≥ t**.
+- **Lowering t** flags more customers: Recall rises (fewer churners missed) and Precision usually falls (more false alarms).
+- **Raising t** does the opposite.
+- **ROC-AUC does not depend on t:** it measures ranking quality across all thresholds. That is why the model is chosen on ROC-AUC first, and its threshold is set afterwards.
+- **The default of 0.5 suits imbalanced data poorly:** with about 20% churners, the model is rarely 50% sure. Here each model's threshold is chosen to maximise F1 on out-of-fold training predictions, for example 0.278 for CatBoost. This raises its test Recall from 0.499 to 0.698 (section 4.3).
 
 ### 5.4 Models
 
