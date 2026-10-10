@@ -18,12 +18,12 @@ def app():
 
 
 def _pages(app):
-    return app.sidebar.radio(key="page").options
+    return app.sidebar.radio(key="page_en").options
 
 
 def _visit_all_pages(app, label):
     for page in _pages(app):
-        app.sidebar.radio(key="page").set_value(page).run()
+        app.sidebar.radio(key="page_en").set_value(page).run()
         assert not app.exception, f"{page} / {label}: {app.exception}"
         assert app.title[0].value in page
 
@@ -42,7 +42,7 @@ def test_every_page_renders_under_every_strategy(app, strategy):
 
 
 def test_custom_threshold_slider_changes_thresholds(app):
-    app.sidebar.radio(key="page").set_value(_pages(app)[3]).run()
+    app.sidebar.radio(key="page_en").set_value(_pages(app)[3]).run()
     app.sidebar.radio(key="strategy").set_value(STRATEGY_CUSTOM).run()
     slider = app.sidebar.slider(key="custom_t")
     assert not slider.disabled
@@ -61,7 +61,7 @@ def test_balanced_class_weighting_renders(app):
 
 
 def test_prediction_tool_reacts_to_inputs(app):
-    app.sidebar.radio(key="page").set_value(_pages(app)[7]).run()
+    app.sidebar.radio(key="page_en").set_value(_pages(app)[7]).run()
     probability = lambda: next(m.value for m in app.metric if m.label == "Churn probability")
     typical = probability()
     app.number_input(key="in_Age").set_value(60)
@@ -73,8 +73,8 @@ def test_prediction_tool_reacts_to_inputs(app):
 
 
 def test_every_metric_column_and_control_has_a_tooltip(app):
-    app.sidebar.radio(key="page").set_value(_pages(app)[3]).run()
-    for key in ("page", "weighting", "strategy"):
+    app.sidebar.radio(key="page_en").set_value(_pages(app)[3]).run()
+    for key in ("page_en", "weighting", "strategy", "lang"):
         assert app.sidebar.radio(key=key).help
     assert app.sidebar.slider(key="custom_t").help
     assert any("Key terms" in e.label for e in app.expander)
@@ -86,7 +86,7 @@ def test_tuning_page_matches_the_saved_report(app):
     """The dashboard recomputes the before/after numbers; they must equal the ones main.py wrote."""
     import pandas as pd
 
-    app.sidebar.radio(key="page").set_value(_pages(app)[4]).run()
+    app.sidebar.radio(key="page_en").set_value(_pages(app)[4]).run()
     assert not app.exception
     labels = {m.label: m.value for m in app.metric}
     saved = pd.read_csv(config.OUTPUT_DIR / "tuning_comparison.csv")
@@ -98,7 +98,7 @@ def test_tuning_page_matches_the_saved_report(app):
 
 
 def test_briefing_answers_the_three_questions_and_journey_navigates(app):
-    app.sidebar.radio(key="page").set_value(_pages(app)[0]).run()
+    app.sidebar.radio(key="page_en").set_value(_pages(app)[0]).run()
     assert not app.exception
     html = " ".join(m.value for m in app.markdown)
     for question in ("The mission", "The investigation", "Success criteria"):
@@ -110,13 +110,13 @@ def test_briefing_answers_the_three_questions_and_journey_navigates(app):
     button = next(b for b in app.button if b.key.startswith("journey_go_"))
     assert button.key == "journey_go_4"
     button.click().run()
-    assert app.sidebar.radio(key="page").value == _pages(app)[4]
+    assert app.sidebar.radio(key="page_en").value == _pages(app)[4]
     assert "Hyperparameter Tuning" in app.title[0].value
 
 
 def test_story_game_page_embeds_the_interactive_game(app):
     """Section 9 embeds the self-contained HTML/JS game with this configuration's real data."""
-    app.sidebar.radio(key="page").set_value(_pages(app)[9]).run()
+    app.sidebar.radio(key="page_en").set_value(_pages(app)[9]).run()
     assert not app.exception
     frames = [el for el in app.main if getattr(el, "type", None) == "iframe"]
     assert len(frames) == 1
@@ -129,3 +129,21 @@ def test_story_game_page_embeds_the_interactive_game(app):
 def test_dashboard_css_has_mobile_breakpoints(app):
     css = next(m.value for m in app.markdown if "<style>" in m.value)
     assert "@media (max-width: 640px)" in css and "@media (max-width: 900px)" in css
+
+
+def test_hebrew_mode_translates_every_section_and_keeps_the_page(app):
+    """Switching to Hebrew keeps the current section, translates titles, and renders every section."""
+    app.sidebar.radio(key="page_en").set_value(_pages(app)[4]).run()
+    app.sidebar.radio(key="lang").set_value("עברית").run()
+    assert not app.exception
+    hebrew_pages = app.sidebar.radio(key="page_he").options
+    assert app.sidebar.radio(key="page_he").value == hebrew_pages[4]  # same section, now in Hebrew
+    assert app.title[0].value == hebrew_pages[4].split(". ", 1)[1]
+    for page in hebrew_pages:
+        app.sidebar.radio(key="page_he").set_value(page).run()
+        assert not app.exception, page
+        assert app.title[0].value == page.split(". ", 1)[1]
+    frames = [el for el in app.main if getattr(el, "type", None) == "iframe"]
+    assert frames and '"lang": "he"' in frames[0].proto.srcdoc  # the game is in Hebrew too
+    app.sidebar.radio(key="lang").set_value("English").run()
+    assert not app.exception and app.sidebar.radio(key="page_en").value == _pages(app)[9]

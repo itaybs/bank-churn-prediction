@@ -1,5 +1,7 @@
 # Bank Customer Churn Prediction
 
+**English** · [עברית](README_HE.md)
+
 **Predicting which bank customers will leave, using five machine-learning models, rigorous cross-validation and hyperparameter tuning, explained through an interactive analytics dashboard and an immersive decision-story game.**
 
 ![Python](https://img.shields.io/badge/Python-tested%20on%203.14-3776AB?logo=python&logoColor=white)
@@ -7,6 +9,7 @@
 ![Models](https://img.shields.io/badge/models-LogReg%20%7C%20RF%20%7C%20XGBoost%20%7C%20LightGBM%20%7C%20CatBoost-2a78d6)
 ![Streamlit](https://img.shields.io/badge/dashboard-Streamlit-FF4B4B?logo=streamlit&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)
+![Languages](https://img.shields.io/badge/UI-English%20%7C%20%D7%A2%D7%91%D7%A8%D7%99%D7%AA-8a8984)
 
 > **20.4% of the bank's 10,000 customers left.** This project ranks every customer by churn risk so that a retention team can act before revenue is lost. It compares an interpretable baseline with four tree ensembles, selects the winner on cross-validation (never on the test set), and explains every result in an interactive dashboard.
 
@@ -23,7 +26,7 @@
 - **Debriefs that explain.** After each week you get a victory or defeat verdict, a success score and generated lessons such as *"Your threshold (50%) was too strict for Lukas: scored 30%, but left"*. It also compares every model's plan on the same customers, and shows how much model choice is worth at scale: a fee-waiver campaign nets **+$141,095 with XGBoost but −$93,923 with Logistic Regression**.
 - **Real where it matters.** Every customer is a real held-out test customer with their real outcome; only the names, the stories and the money assumptions are invented. The game's engine (`engine.js`) is executed by the test suite under Node and checked against the Python reference engine.
 
-[How it works ↓](#the-chief-retention-officer-interactive-decision-story)
+[🎮 How to play ↓](#how-to-play-step-by-step) · [How it works ↓](#the-chief-retention-officer-interactive-decision-story)
 
 ---
 
@@ -31,7 +34,7 @@
 
 1. [Executive summary](#1-executive-summary)
 2. [Quick start](#2-quick-start)
-3. [Dashboard tour](#3-dashboard-tour) · [⭐ The Chief Retention Officer](#the-chief-retention-officer-interactive-decision-story)
+3. [Dashboard tour](#3-dashboard-tour) · [⭐ The Chief Retention Officer](#the-chief-retention-officer-interactive-decision-story) · [🎮 How to play](#how-to-play-step-by-step) · [🌐 English and Hebrew](#english-and-hebrew)
 4. [Results](#4-results)
 5. [Methodology and theory](#5-methodology-and-theory)
 6. [Architecture](#6-architecture)
@@ -65,7 +68,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 python main.py                 # full workflow -> outputs/ (~8-10 min, mostly GridSearchCV)
-python -m pytest               # 96 automated tests (~8 min including the dashboard tests)
+python -m pytest               # 106 automated tests (~8 min including the dashboard tests)
 streamlit run app.py --server.address=localhost --server.port=8501
 ```
 
@@ -81,7 +84,7 @@ Then open **http://localhost:8501/**. The same address and port are set in `.str
 
 ## 3. Dashboard tour
 
-An English Streamlit dashboard (`app.py`) with ten sections. **Every metric column, control and KPI has a hover tooltip**, every section has a *Key terms* panel, and the sidebar holds a full glossary (`churn/glossary.py`).
+A Streamlit dashboard (`app.py`) with ten sections, in **English (default) or Hebrew**. **Every metric column, control and KPI has a hover tooltip**, every section has a *Key terms* panel, and the sidebar holds a full glossary (`churn/glossary.py`).
 
 **Mobile-friendly.** The dashboard and the story game adapt to phones, tablets and desktops:
 - the sidebar collapses automatically on small screens;
@@ -126,6 +129,28 @@ Every section was audited in headless Chrome at 360, 390, 768, 1024 and 1440 px,
 | **Debrief** | A victory or defeat verdict with a badge and an animated 0–100 success score (your net value as a share of perfect hindsight), plus true savings, wasted budget, lost revenue and net ROI. You are compared with your model's own plan and with perfect hindsight; a chart shows every model's plan scored on the real outcomes. Generated lessons cover the threshold (who slipped below it), Precision (loyal customers flagged), your false positives and negatives, model choice this week, and model choice at scale. |
 | **Season report** | After five weeks: your total vs following the models vs perfect hindsight, wasted vs lost, and five takeaways for a Chief Retention Officer. |
 
+### How to play: step by step
+
+> Open the dashboard, then pick **"9. The Chief Retention Officer"** in the sidebar. On a phone, open the sidebar with the **»** icon at the top left.
+
+1. **Read the story (about 2 minutes).** Four short chapters explain your job, what a churn probability is, why the threshold matters (50% vs the model's cross-validated optimum) and the Precision/Recall trade-off. Use **Next →**, or **Skip story** if you already know the basics. **📖 Story** brings it back at any time.
+2. **Meet the week's five customers.** Each card shows the customer's churn risk from the selected model, a risk bar with the threshold marker, a mood badge (😠 high risk, 😐 wavering, 😊 loyal), a short profile and the **value at stake** if they leave. **Click a card** and the customer talks to you in the chat bubble.
+3. **Choose your crystal ball.** The model chips (Logistic Regression, Random Forest, XGBoost, LightGBM, CatBoost) show each model's ROC-AUC and optimal threshold; ⭐ marks the model selected by cross-validation. Switching models re-scores every card instantly. Try the same customers under Logistic Regression and CatBoost.
+4. **Set your rule.** Move the **decision threshold** slider: customers at or above it are flagged and glow red. *Use model's optimum* and *Default 50%* jump to the two reference points. Watch the **🔭 at-scale panel**: it shows what your rule would do on all 2,000 test customers (flagged, Recall, Precision, wasted budget, missed churners, net value).
+5. **Spend the budget.** Give each customer an incentive with the buttons under the card: 🚫 none, 📞 call ($500, 25% success), 💳 fee waiver ($1,500, 40%) or 👑 VIP ($3,500, 60%). The customer reacts in the bubble, and the HUD updates the budget left, the model-expected savings and the expected ROI. Or choose an incentive and press **🎯 Target all flagged** to apply your threshold rule (highest risk first if money runs out). You cannot overspend the $10,000: the card shakes.
+6. **Reveal what happened.** Press **🎲 Reveal what happened**. Cards flip one by one with the **real outcome**: ✅ you reached a churner (expected saving), ❌ a churner left unreached (lost value), ⚠️ you paid a customer who was staying anyway (wasted), 👍 a loyal customer correctly left alone.
+7. **Learn from the debrief.** It shows:
+   - a victory or defeat verdict with a badge and a **0–100 success score** (your net value as a share of what perfect hindsight would have earned);
+   - the four KPIs: true savings, wasted budget, lost revenue and net ROI;
+   - you vs your model's own plan vs perfect hindsight, plus every model's plan scored on the same real customers;
+   - generated lessons, for example a threshold that was too strict, loyal customers flagged, or a better model choice.
+8. **Play five weeks.** **Next week →** deals five new real customers. After week 5, the **season report** totals your results against following the models and against perfect hindsight, with five takeaways. **🔁 Play again** restarts the season.
+
+**Tips from the data**
+- With about one churner in five, **a 50% threshold misses many leavers**. Start from the model's optimum (around 28–34%).
+- Expensive incentives pay off only on customers who are likely to leave. A VIP package for a 10%-risk customer is usually wasted.
+- One week of five customers is noisy: a weaker model can win a single week. The at-scale panel and the season total show which choices hold up.
+
 **What is real and what is assumed.**
 - **Real:** every persona is a real customer from the held-out test set, drawn at random from an archetype with a fixed seed per week (never chosen by score or outcome). Each customer's five model probabilities and their real outcome come from the test set, as do the confusion counts behind the at-scale panel.
 - **Invented:** the names, avatars, stories and dialogue.
@@ -136,6 +161,23 @@ Every section was audited in headless Chrome at 360, 390, 768, 1024 and 1440 px,
 - **Page:** it injects the payload into `churn/game_assets/game.html`, which has no external requests.
 - **Embedding:** the dashboard embeds the page with `st.iframe(..., height="content")`, the current replacement for the deprecated `st.components.v1.html`. The iframe sizes itself to the game. The page is responsive (breakpoints at 1180, 860, 560 and 480 px), and its debrief opens inline so it works at any height. The cached page is keyed on a hash of the game files, so edits always show up.
 - **Money logic:** all money and scoring logic lives in `churn/game_assets/engine.js` as pure functions. `tests/test_story_game.py` runs it under Node and compares outcomes, plans, scores, badges and at-scale statistics with the Python reference engine and with direct test-set computations.
+
+### English and Hebrew
+
+The language selector at the top of the sidebar (**🌐 Language · שפה**) switches the interface between **English (default)** and **Hebrew**:
+
+- **Fully translated:**
+  - navigation, page titles and subtitles, and sidebar controls;
+  - the **Executive Briefing**: hero, mission cards, KPIs, churn triggers and journey map;
+  - every **metric tooltip**, the *Key terms* panels and the sidebar **glossary**;
+  - **the entire story game**: story, personas and dialogue, lessons, debrief and season report.
+- **In English on the other pages:** the deeper analytical prose and the automatically generated insights. Hebrew mode says so with a short note.
+- **Right-to-left layout:** Hebrew turns on RTL layout for the dashboard and the game. Charts, tables, code, sliders and numbers stay left-to-right, and the journey map runs right to left. Hebrew text uses the Assistant font.
+- **Navigation:** switching language keeps you on the same section.
+- **Gender-neutral wording:** Hebrew text addresses the reader in the plural ("אתם"). Each persona speaks in their own grammatical gender.
+- **Where the text lives:** dashboard strings in `churn/i18n.py`, definitions in `churn/glossary.py`, and game text in `churn/game_assets/i18n.js`. Tests check that both languages define the same keys and the same placeholders.
+
+The Hebrew documentation is in [README_HE.md](README_HE.md).
 
 ### Screenshots
 
@@ -321,9 +363,9 @@ flowchart LR
     T --> F
     F --> I[Metrics · ROC · confusion<br/>permutation importance]
     G & H & I --> R[outputs/report.md + CSV/PNG]
-    G & H & I & M --> S[Streamlit dashboard]
+    G & H & I & M --> S[Streamlit dashboard<br/>English / Hebrew]
     F & H --> GM[Story game payload<br/>real test customers +<br/>assumed economics]
-    GM --> J[HTML/JS game<br/>engine.js]
+    GM --> J[HTML/JS game<br/>engine.js + i18n.js]
     J --> S
 ```
 
@@ -350,6 +392,7 @@ churn_modelling/
 ├── .streamlit/config.toml       # dashboard served at localhost:8501
 ├── assets/gradient_boosting.gif # animation shown in the dashboard and in this README
 ├── docs/screenshots/            # dashboard screenshots (see the guide inside)
+├── README_HE.md                 # this documentation in Hebrew
 ├── churn/
 │   ├── config.py                # paths, column lists, split and CV settings, random seed
 │   ├── data.py                  # load, validate, define X/y, train/test split
@@ -363,13 +406,15 @@ churn_modelling/
 │   ├── evaluation.py            # metrics, comparison tables and plots
 │   ├── explain.py               # per-customer what-if explanation
 │   ├── analysis.py              # everything the dashboard computes
-│   ├── glossary.py              # definitions behind every tooltip
+│   ├── glossary.py              # definitions behind every tooltip (English and Hebrew)
+│   ├── i18n.py                  # dashboard interface text in English and Hebrew
 │   ├── animation.py             # renders the gradient-boosting GIF
 │   ├── game.py                  # story game: personas, game economics, Python reference engine
 │   ├── story_game.py            # story game: real-data payload + HTML rendering
 │   ├── game_assets/
 │   │   ├── game.html            # the interactive game (HTML/CSS/JS, self-contained)
-│   │   └── engine.js            # pure game logic, tested under Node
+│   │   ├── engine.js            # pure game logic, tested under Node
+│   │   └── i18n.js              # game text in English and Hebrew
 │   ├── formatting.py            # the single rounding rule
 │   └── report.py                # writes outputs/report.md
 ├── tests/                       # pytest suite (components, workflow, dashboard)
@@ -389,7 +434,7 @@ churn_modelling/
 python -m pytest
 ```
 
-The suite (96 tests) covers:
+The suite (106 tests) covers:
 
 - **Data:** validation errors for missing files or columns, a non-binary target and missing values; stratification; the absence of identifiers and the target from `X`.
 - **Leakage:** scalers learn training statistics only; CV never fits the pipeline passed in.
@@ -401,6 +446,10 @@ The suite (96 tests) covers:
   - The payload's customers, probabilities, outcomes, thresholds and confusion counts equal the real test-set values, and the rendered page is self-contained.
   - Every script parses (`node --check`), and **the JavaScript engine reproduces the Python engine** on 25 random weeks and the real at-scale counts.
 - **Dashboard:** headless Streamlit `AppTest` renders all ten sections under every threshold strategy and both class weightings, checks the tooltips and the journey-map navigation, checks that the story game is embedded with this configuration's real data, and checks that the tuning page's numbers equal those saved by `main.py`.
+- **English and Hebrew:**
+  - Every interface string, glossary entry, hyperparameter explanation, persona line and game text exists in both languages with the same placeholders.
+  - Hebrew text really is Hebrew, and every game text function renders in both languages under Node.
+  - In the dashboard, switching to Hebrew keeps the current section, every section renders with its Hebrew title, and the game is embedded in Hebrew.
 - **Formatting, glossary and animation:** a single rounding rule, every metric and hyperparameter explained, and the animation's loss behaviour.
 
 Reproducibility: with seed 42, repeated runs of `main.py` produce byte-identical CSV files.
@@ -430,6 +479,7 @@ Reproducibility: with seed 42, repeated runs of `main.py` produce byte-identical
 | GridSearchCV tuning (Random Forest, XGBoost) | ✅ Implemented |
 | Executive briefing, journey map, tooltips, boosting animation | ✅ Implemented |
 | The Chief Retention Officer: interactive ML decision story (HTML/JS) | ✅ Implemented |
+| English / Hebrew interface with right-to-left layout | ✅ Implemented |
 | Nested cross-validation for tuning | 🗓️ Planned |
 | Tuning LightGBM and CatBoost | 🗓️ Planned |
 | Probability calibration (`CalibratedClassifierCV`) | 🗓️ Planned |

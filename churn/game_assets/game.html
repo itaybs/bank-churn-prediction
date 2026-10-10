@@ -215,6 +215,14 @@ select option { color: #0b1020; }
   .hud .v { font-size: 17px; }
 }
 @media (hover: none) { .card:hover, .btn:hover:not(:disabled) { transform: none; } }
+/* ---------- right-to-left (Hebrew) ---------- */
+[dir="rtl"] .bubble::after { left: auto; right: 26px; }
+[dir="rtl"] .tval { text-align: left; }
+[dir="rtl"] .eyebrow, [dir="rtl"] .panel-title, [dir="rtl"] .hud .k, [dir="rtl"] .stat .k, [dir="rtl"] .badge { letter-spacing: .02em; }
+[dir="rtl"] .chip { align-items: flex-start; }
+/* Scales, bars and money read left to right in Hebrew too. */
+[dir="rtl"] .bar, [dir="rtl"] .mini-bar, [dir="rtl"] .mtrack, [dir="rtl"] .budget-track, [dir="rtl"] input[type=range] { direction: ltr; }
+.num, .hud .v, .risk b, .tval { unicode-bidi: plaintext; }
 </style>
 </head>
 <body>
@@ -223,15 +231,15 @@ select option { color: #0b1020; }
 <!-- ======================= INTRO STORY ======================= -->
 <section id="intro" class="screen active">
   <div class="intro glass">
-    <div class="eyebrow">A machine learning decision story</div>
-    <h1>🏦 The Chief Retention Officer</h1>
+    <div class="eyebrow" data-i18n="eyebrow">A machine learning decision story</div>
+    <h1 data-i18n="title">🏦 The Chief Retention Officer</h1>
     <div id="chapters"></div>
     <div class="dots" id="dots"></div>
     <div class="nav">
-      <button class="btn ghost" id="prevCh">← Back</button>
+      <button class="btn ghost" id="prevCh" data-i18n="back">← Back</button>
       <div>
-        <button class="btn ghost" id="skipIntro">Skip story</button>
-        <button class="btn primary big" id="nextCh">Next →</button>
+        <button class="btn ghost" id="skipIntro" data-i18n="skip">Skip story</button>
+        <button class="btn primary big" id="nextCh" data-i18n="next">Next →</button>
       </div>
     </div>
   </div>
@@ -240,36 +248,36 @@ select option { color: #0b1020; }
 <!-- ======================= GAME ======================= -->
 <section id="game" class="screen">
   <div class="row" style="justify-content: space-between; margin: 0 0 10px;">
-    <div><div class="eyebrow" id="weekLabel">Week 1 of 5</div><h2 style="margin:2px 0 0">Five customers are on your desk</h2></div>
-    <div class="row" style="margin:0"><button class="btn ghost" id="replayStory">📖 Story</button></div>
+    <div><div class="eyebrow" id="weekLabel"></div><h2 style="margin:2px 0 0" data-i18n="deskTitle">Five customers are on your desk</h2></div>
+    <div class="row" style="margin:0"><button class="btn ghost" id="replayStory" data-i18n="storyBtn">📖 Story</button></div>
   </div>
 
   <div class="hud">
-    <div class="cell glass"><div class="k">Budget left</div><div class="v" id="hudBudget">$0</div>
+    <div class="cell glass"><div class="k" data-i18n="hudBudget">Budget left</div><div class="v" id="hudBudget">$0</div>
       <div class="budget-track"><div class="budget-fill" id="budgetFill" style="width:0%"></div></div></div>
-    <div class="cell glass"><div class="k">Committed</div><div class="v" id="hudSpend">$0</div><div class="s" id="hudTargets">0 customers targeted</div></div>
-    <div class="cell glass"><div class="k" id="hudSaveK">Model-expected savings</div><div class="v" id="hudSave">$0</div><div class="s" id="hudSaveS">if the model's risks are right</div></div>
-    <div class="cell glass"><div class="k" id="hudRoiK">Expected ROI</div><div class="v" id="hudRoi">–</div><div class="s" id="hudRoiS">(savings − spend) / spend</div></div>
-    <div class="cell glass"><div class="k">Season total</div><div class="v" id="hudSeason">$0</div><div class="s" id="hudSeasonS">net value over revealed weeks</div></div>
+    <div class="cell glass"><div class="k" data-i18n="hudCommitted">Committed</div><div class="v" id="hudSpend">$0</div><div class="s" id="hudTargets"></div></div>
+    <div class="cell glass"><div class="k" id="hudSaveK"></div><div class="v" id="hudSave">$0</div><div class="s" id="hudSaveS"></div></div>
+    <div class="cell glass"><div class="k" id="hudRoiK"></div><div class="v" id="hudRoi">–</div><div class="s" id="hudRoiS"></div></div>
+    <div class="cell glass"><div class="k" data-i18n="hudSeason">Season total</div><div class="v" id="hudSeason">$0</div><div class="s" data-i18n="hudSeasonS">net value over revealed weeks</div></div>
   </div>
 
   <div class="controls">
     <div class="panel glass">
-      <div class="panel-title"><span>🧠 Your crystal ball: choose a model</span><span id="modelNote"></span></div>
+      <div class="panel-title"><span data-i18n="crystal">🧠 Your crystal ball: choose a model</span><span id="modelNote"></span></div>
       <div class="chips" id="chips"></div>
       <div class="hint" id="modelHint"></div>
     </div>
     <div class="panel glass">
-      <div class="panel-title"><span>🎚️ Decision threshold</span><span id="tOpt"></span></div>
+      <div class="panel-title"><span data-i18n="thresholdTitle">🎚️ Decision threshold</span><span id="tOpt"></span></div>
       <div class="slider-row"><input type="range" id="tSlider" min="0.05" max="0.95" step="0.01"><div class="tval" id="tVal">50%</div></div>
       <div class="row">
-        <button class="btn" id="tModel">Use model's optimum</button>
-        <button class="btn" id="tDefault">Default 50%</button>
-        <select id="autoInc" aria-label="Incentive for flagged customers"></select>
-        <button class="btn" id="autoTarget">🎯 Target all flagged</button>
-        <button class="btn ghost" id="clearAll">Clear</button>
+        <button class="btn" id="tModel" data-i18n="useOpt">Use model's optimum</button>
+        <button class="btn" id="tDefault" data-i18n="default50">Default 50%</button>
+        <select id="autoInc"></select>
+        <button class="btn" id="autoTarget" data-i18n="targetAll">🎯 Target all flagged</button>
+        <button class="btn ghost" id="clearAll" data-i18n="clear">Clear</button>
       </div>
-      <div class="hint">Customers with risk ≥ threshold are <b>flagged</b> (glowing red). Lower it to catch more churners (Recall ↑), raise it to waste less on loyal ones (Precision ↑).</div>
+      <div class="hint" data-i18n="thresholdHint"></div>
     </div>
   </div>
 
@@ -277,14 +285,14 @@ select option { color: #0b1020; }
 
   <div class="lower">
     <div class="panel glass">
-      <div class="panel-title"><span>🔭 This rule at scale: all <span id="scaleN"></span> test customers</span><span id="scaleIncName"></span></div>
+      <div class="panel-title"><span id="scaleTitle"></span><span id="scaleIncName"></span></div>
       <div class="scale-grid" id="scaleGrid"></div>
       <div class="hint" id="scaleHint"></div>
     </div>
     <div class="glass reveal-wrap">
-      <div style="font-weight:700">Ready? Outcomes are the <i>real</i> results of these held-out customers.</div>
-      <button class="btn primary big" id="reveal">🎲 Reveal what happened</button>
-      <div class="hint" id="revealHint">Click a card to talk to the customer, then pick an incentive with the buttons.</div>
+      <div style="font-weight:700" data-i18n="readyText"></div>
+      <button class="btn primary big" id="reveal"></button>
+      <div class="hint" id="revealHint"></div>
     </div>
   </div>
 
@@ -297,7 +305,6 @@ select option { color: #0b1020; }
   <div class="intro glass" id="finalBody"></div>
 </section>
 
-
 <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddc97"/><stop offset="1" stop-color="#5aa9ff"/></linearGradient></defs></svg>
 </div>
 
@@ -305,10 +312,17 @@ select option { color: #0b1020; }
 /*__ENGINE__*/
 </script>
 <script>
+/*__I18N__*/
+</script>
+<script>
 (function () {
 "use strict";
 const DATA = /*__PAYLOAD__*/null;
 const E = window.Engine;
+const LANG = window.I18N[DATA.lang] ? DATA.lang : "en";
+const L = window.I18N[LANG];
+/* Text for key in the selected language (English fallback); functions receive the arguments. */
+const T = (key, ...args) => { const v = key in L ? L[key] : window.I18N.en[key]; return typeof v === "function" ? v(...args) : v; };
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const money = (x, signed) => (x < 0 ? "−" : signed && x > 0 ? "+" : "") + "$" + Math.round(Math.abs(x)).toLocaleString("en-US");
@@ -317,6 +331,14 @@ const econ = DATA.econ;
 const incById = Object.fromEntries(econ.incentives.map((i) => [i.id, i]));
 const modelByName = Object.fromEntries(DATA.models.map((m) => [m.name, m]));
 const BUDGET = DATA.budget;
+const names = (cs) => T("list", cs.map((c) => esc(c.name)));
+const badgeText = ([icon, title, message]) => [icon, ...(L.badges[title] || [title, message])];
+
+document.documentElement.lang = LANG;
+document.documentElement.dir = L.dir;
+document.title = T("title").replace("🏦 ", "");
+document.querySelectorAll("[data-i18n]").forEach((el) => { el.innerHTML = T(el.dataset.i18n); });
+$("autoInc").setAttribute("aria-label", T("autoIncLabel"));
 
 const state = {
   week: 0, model: DATA.best, t: modelByName[DATA.best].threshold, decisions: [], revealed: false,
@@ -354,32 +376,15 @@ function storyChapters() {
   const waiver = incById.waiver;
   const at50 = E.scaleStats(g, 0.5, waiver), atOpt = E.scaleStats(g, best.threshold, waiver);
   const lr = DATA.models.find((m) => m.name === "Logistic Regression");
-  return [
-    { title: "Chapter 1 · Your first day",
-      text: `<p class="lead">Congratulations: you are the bank's new <b>Chief Retention Officer</b>. Last year <b>${pct(DATA.base_rate, 1)}</b> of customers walked out of the door, taking their balances and fees with them.</p>
-             <p class="lead">Every week you get <b>${money(BUDGET)}</b> and five customers on your desk. Spend it on calls, fee waivers or VIP packages to keep the ones who are about to leave. But every dollar spent on a customer who was staying anyway is wasted.</p>`,
-      visual: `<div class="compare">${econ.incentives.map((i) => `<div class="stat"><div class="k">${esc(i.icon)} ${esc(i.name)}</div><div class="v">${money(i.cost)}</div><div class="s">${pct(i.success)} chance a would-be churner stays · ${esc(i.blurb)}</div></div>`).join("")}<div class="stat"><div class="k">Your budget</div><div class="v">${money(BUDGET)}</div><div class="s">per week, for ${DATA.rounds.length} weeks</div></div></div>` },
-    { title: "Chapter 2 · Your crystal ball: churn risk probability",
-      text: `<p class="lead">You cannot ask customers whether they plan to leave. But the data science team trained <b>${DATA.models.length} machine learning models</b> on 8,000 past customers. For anyone on your desk, a model returns a <b>churn risk probability</b>: P(customer leaves).</p>
-             <p class="lead">Models are not equally good. Their ranking quality is measured by <b>ROC-AUC</b> (0.5 = coin flip, 1.0 = perfect): ${DATA.models.map((m) => `${esc(m.name)} <b>${m.cv_auc.toFixed(3)}</b>`).join(", ")}. You can switch models live during the game and see your results change.</p>`,
-      visual: `<div class="eyebrow">Example: a customer scored ${pct(0.62)}</div><div class="mini-bar"><div class="mini-fill" style="width:62%"></div></div>
-               <div class="compare"><div class="stat"><div class="k">Best ranker</div><div class="v">${esc(best.name)}</div><div class="s">CV ROC-AUC ${best.cv_auc.toFixed(3)}</div></div>
-               <div class="stat"><div class="k">Linear baseline</div><div class="v">${lr ? esc(lr.name.replace("Logistic Regression", "Log. Regression")) : "–"}</div><div class="s">CV ROC-AUC ${lr ? lr.cv_auc.toFixed(3) : "–"}</div></div></div>` },
-    { title: "Chapter 3 · Your rule: the decision threshold",
-      text: `<p class="lead">A probability is not a decision. You need a rule: <b>flag a customer when risk ≥ threshold</b>. The textbook default is 50%. But with only one churner in five, ${esc(best.name)} rarely gets that sure, and a 50% rule misses many leavers.</p>
-             <p class="lead">Using cross-validation on training data only, the team found that <b>${pct(best.threshold)}</b> balances catches and false alarms best for ${esc(best.name)}. On all ${DATA.scale.n.toLocaleString()} test customers:</p>`,
-      visual: `<div class="mini-bar"><div class="mini-fill" style="width:100%; opacity:.35"></div><div class="tick" style="left:${best.threshold * 100}%"><span>${pct(best.threshold)}</span></div><div class="tick" style="left:50%"><span>50%</span></div></div>
-               <div class="compare"><div class="stat"><div class="k">Threshold 50%</div><div class="v">${pct(at50.recall)}</div><div class="s">of churners caught (Recall) · ${pct(at50.precision)} of flags correct (Precision)</div></div>
-               <div class="stat"><div class="k">Threshold ${pct(best.threshold)}</div><div class="v">${pct(atOpt.recall)}</div><div class="s">of churners caught (Recall) · ${pct(atOpt.precision)} of flags correct (Precision)</div></div></div>` },
-    { title: "Chapter 4 · The trade-off you will live with",
-      text: `<p class="lead"><b>Precision</b> asks: of the customers I spent money on, how many were really leaving? Low precision = <b>wasted budget</b> on loyal customers (false positives).</p>
-             <p class="lead"><b>Recall</b> asks: of the customers who left, how many did I reach? Low recall = <b>lost revenue</b> from churners nobody called (false negatives).</p>
-             <p class="lead">Lowering the threshold trades one for the other. Your job: find the balance that makes money. Each week ends with a debrief that shows what the data really said.</p>`,
-      visual: `<div class="compare"><div class="stat"><div class="k">⚠️ False positive</div><div class="v" style="color:var(--amber)">Wasted</div><div class="s">You paid a loyal customer who was staying anyway.</div></div>
-               <div class="stat"><div class="k">❌ False negative</div><div class="v" style="color:var(--red)">Lost</div><div class="s">A churner left and nobody tried to keep them.</div></div>
-               <div class="stat"><div class="k">✅ True positive</div><div class="v" style="color:var(--green)">Saved</div><div class="s">You reached a churner; the incentive may keep them.</div></div>
-               <div class="stat"><div class="k">👍 True negative</div><div class="v" style="color:var(--blue)">Fine</div><div class="s">A loyal customer, correctly left alone.</div></div></div>` },
-  ];
+  return T("chapters", {
+    base: pct(DATA.base_rate, 1), budget: money(BUDGET), weeks: DATA.rounds.length, nModels: DATA.models.length,
+    incentives: econ.incentives.map((i) => ({ icon: esc(i.icon), name: esc(i.name), cost: money(i.cost), success: pct(i.success), blurb: esc(i.blurb) })),
+    modelList: DATA.models.map((m) => `${esc(m.name)} <b>${m.cv_auc.toFixed(3)}</b>`).join(", "),
+    best: esc(best.name), bestAuc: best.cv_auc.toFixed(3), lrAuc: lr ? lr.cv_auc.toFixed(3) : "–",
+    opt: pct(best.threshold), n: DATA.scale.n.toLocaleString("en-US"),
+    r50: pct(at50.recall), p50: pct(at50.precision), rOpt: pct(atOpt.recall), pOpt: pct(atOpt.precision),
+    thresholdBar: `<div class="mini-bar"><div class="mini-fill" style="width:100%; opacity:.35"></div><div class="tick" style="left:${best.threshold * 100}%"><span>${pct(best.threshold)}</span></div><div class="tick" style="left:50%"><span>50%</span></div></div>`,
+  });
 }
 let chapter = 0;
 function renderStory() {
@@ -388,7 +393,7 @@ function renderStory() {
       <div class="chapter-grid"><div>${c.text}</div><div class="visual glass">${c.visual}</div></div></div>`).join("");
   $("dots").innerHTML = chs.map((_, i) => `<div class="dot ${i === chapter ? "on" : ""}"></div>`).join("");
   $("prevCh").disabled = chapter === 0;
-  $("nextCh").textContent = chapter === chs.length - 1 ? "Start week 1 →" : "Next →";
+  $("nextCh").textContent = chapter === chs.length - 1 ? T("startWeek1") : T("next");
 }
 function bringIntoView(el) {
   // The dashboard sizes the iframe to its content, so the scrolling happens in the parent page.
@@ -405,19 +410,19 @@ $("replayStory").onclick = () => { chapter = 0; renderStory(); show("intro"); };
 
 /* ---------------- game board ---------------- */
 function riskState(p) {
-  if (p >= state.t) return ["red", "😠 HIGH RISK"];
-  if (p >= DATA.base_rate) return ["amber", "😐 WAVERING"];
-  return ["green", "😊 LOYAL"];
+  if (p >= state.t) return ["red", T("riskHigh")];
+  if (p >= DATA.base_rate) return ["amber", T("riskWavering")];
+  return ["green", T("riskLoyal")];
 }
 function riskColor(p) { return p >= state.t ? "var(--red)" : p >= DATA.base_rate ? "var(--amber)" : "var(--green)"; }
 
 function renderChips() {
   $("chips").innerHTML = DATA.models.map((m) => `<button class="chip ${m.name === state.model ? "on" : ""}" style="--chip:${m.color}" data-model="${esc(m.name)}">
       <span class="n"><span class="sw" style="background:${m.color}"></span>${esc(m.name)}${m.name === DATA.best ? " ⭐" : ""}</span>
-      <span class="m">ROC-AUC ${m.cv_auc.toFixed(3)} · optimum ${pct(m.threshold)}</span></button>`).join("");
+      <span class="m">${T("chipMeta", m.cv_auc.toFixed(3), pct(m.threshold))}</span></button>`).join("");
   document.querySelectorAll(".chip").forEach((b) => b.onclick = () => switchModel(b.dataset.model));
   const m = modelByName[state.model];
-  $("modelHint").innerHTML = `${esc(m.name)} ranks a random churner above a random loyal customer <b>${pct(m.cv_auc)}</b> of the time (cross-validated). ⭐ = selected by cross-validation.`;
+  $("modelHint").innerHTML = T("modelHint", esc(m.name), pct(m.cv_auc));
 }
 function switchModel(name) {
   const keepCustom = Math.abs(state.t - modelByName[state.model].threshold) > 1e-9;
@@ -434,13 +439,13 @@ function buildBoard() {
       <div class="who"><div class="avatar" id="av${i}">${c.avatar}</div>
         <div><div class="name">${esc(c.name)}</div><div class="title">${esc(c.title)}</div></div></div>
       <div class="badge" id="badge${i}"></div>
-      <div class="risk"><span>Churn risk</span><b id="rp${i}">0%</b></div>
+      <div class="risk"><span>${T("churnRisk")}</span><b id="rp${i}">0%</b></div>
       <div class="bar"><div class="fill" id="fill${i}"></div><div class="tmark" id="tm${i}"></div></div>
-      <div class="facts">Age ${c.age} · ${esc(c.geo)} · ${c.products} product${c.products > 1 ? "s" : ""} · ${c.active ? "active" : "inactive"} · ${c.tenure} yrs<br>Balance $${Math.round(c.balance).toLocaleString("en-US")}</div>
-      <div class="value">Value at stake <b>${money(c.value)}</b></div>
+      <div class="facts">${T("facts", c, esc(L.geo[c.geo] || c.geo), "$" + Math.round(c.balance).toLocaleString("en-US"))}</div>
+      <div class="value">${T("valueAtStake")} <b>${money(c.value)}</b></div>
       <div class="actions" id="acts${i}">
-        <button class="act" data-inc="none" title="No action">🚫<small>none</small></button>
-        ${econ.incentives.map((inc) => `<button class="act" data-inc="${inc.id}" title="${esc(inc.name)}: ${money(inc.cost)}, ${pct(inc.success)} success">${inc.icon}<small>${money(inc.cost)}</small></button>`).join("")}
+        <button class="act" data-inc="none" title="${T("noAction")}">🚫<small>${T("none")}</small></button>
+        ${econ.incentives.map((inc) => `<button class="act" data-inc="${inc.id}" title="${T("actTitle", esc(inc.name), money(inc.cost), pct(inc.success))}">${inc.icon}<small>${money(inc.cost)}</small></button>`).join("")}
       </div>
       <div class="result" id="res${i}"></div>
     </div>`).join("");
@@ -470,7 +475,7 @@ function choose(i, inc) {
   const next = state.decisions.slice(); next[i] = inc;
   if (E.spend(next, econ) > BUDGET + 1e-9) {
     const card = $("card" + i); card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
-    say(i, "Over budget! Free up money elsewhere first.");
+    say(i, T("overBudget"));
     return;
   }
   state.decisions = next;
@@ -494,20 +499,19 @@ function updateBoard(fromModelSwitch) {
     });
   });
   $("tVal").textContent = pct(state.t);
-  $("tOpt").textContent = `${state.model} optimum: ${pct(modelByName[state.model].threshold)}`;
+  $("tOpt").textContent = T("optimumOf", state.model, pct(modelByName[state.model].threshold));
 }
 function updateHud() {
   const spent = E.spend(state.decisions, econ);
   tick($("hudBudget"), BUDGET - spent, (v) => money(v));
   $("budgetFill").style.width = pct(spent / BUDGET, 1);
   tick($("hudSpend"), spent, (v) => money(v));
-  const n = state.decisions.filter((d) => d !== "none").length;
-  $("hudTargets").textContent = `${n} customer${n === 1 ? "" : "s"} targeted`;
+  $("hudTargets").textContent = T("targeted", state.decisions.filter((d) => d !== "none").length);
   if (!state.revealed) {
     const exp = state.decisions.reduce((s, d, i) => s + probs()[i] * E.incentiveById(econ, d).success * values()[i], 0);
-    $("hudSaveK").textContent = "Model-expected savings"; $("hudSaveS").textContent = `if ${state.model}'s risks are right`;
+    $("hudSaveK").textContent = T("hudExpSave"); $("hudSaveS").textContent = T("hudExpSaveS", state.model);
     tick($("hudSave"), exp, (v) => money(v));
-    $("hudRoiK").textContent = "Expected ROI"; $("hudRoiS").textContent = "(savings − spend) / spend";
+    $("hudRoiK").textContent = T("hudExpRoi"); $("hudRoiS").textContent = T("hudRoiS");
     const roi = spent ? (exp - spent) / spent : null;
     $("hudRoi").textContent = roi === null ? "–" : (roi >= 0 ? "+" : "") + pct(roi);
     $("hudRoi").className = "v " + (roi === null ? "" : roi >= 0 ? "good" : "bad");
@@ -519,18 +523,18 @@ function updateHud() {
 function updateScale() {
   const inc = incById[state.autoInc];
   const s = E.scaleStats(DATA.scale.models[state.model], state.t, inc);
-  $("scaleN").textContent = DATA.scale.n.toLocaleString("en-US");
-  $("scaleIncName").textContent = `${inc.icon} ${inc.name} for every flagged customer`;
+  $("scaleTitle").textContent = T("scaleTitle", DATA.scale.n.toLocaleString("en-US"));
+  $("scaleIncName").textContent = T("scaleIncName", inc.icon, inc.name);
   const cells = [
-    ["Flagged", s.flagged.toLocaleString("en-US"), `${s.tp} churners + ${s.fp} loyal`],
-    ["Recall", pct(s.recall), `${s.tp} of ${s.tp + s.fn} churners caught`],
-    ["Precision", pct(s.precision), `${s.tp} of ${s.flagged} flags correct`],
-    ["Wasted (FP)", money(s.wasted), `${s.fp} loyal customers paid`],
-    ["Missed (FN)", s.fn.toLocaleString("en-US"), `churners never contacted`],
-    ["Net value", money(s.net, true), `savings ${money(s.savings)} − spend ${money(s.spend)}`],
+    [T("sFlagged"), s.flagged.toLocaleString("en-US"), T("sFlaggedS", s.tp, s.fp)],
+    [T("sRecall"), pct(s.recall), T("sRecallS", s.tp, s.tp + s.fn)],
+    [T("sPrecision"), pct(s.precision), T("sPrecisionS", s.tp, s.flagged)],
+    [T("sWasted"), money(s.wasted), T("sWastedS", s.fp)],
+    [T("sMissed"), s.fn.toLocaleString("en-US"), T("sMissedS")],
+    [T("sNet"), money(s.net, true), T("sNetS", money(s.savings), money(s.spend))],
   ];
-  $("scaleGrid").innerHTML = cells.map(([k, v, sub], i) => `<div class="stat"><div class="k">${k}</div><div class="v" style="${i === 5 ? `color:${s.net >= 0 ? "var(--green)" : "var(--red)"}` : ""}">${v}</div><div class="s">${sub}</div></div>`).join("");
-  $("scaleHint").textContent = `Real test-set counts for ${state.model} at threshold ${pct(s.threshold)}. Move the slider or switch model and watch Precision and Recall trade places.`;
+  $("scaleGrid").innerHTML = cells.map(([k, v, sub], i) => `<div class="stat"><div class="k">${k}</div><div class="v num" style="${i === 5 ? `color:${s.net >= 0 ? "var(--green)" : "var(--red)"}` : ""}">${v}</div><div class="s">${sub}</div></div>`).join("");
+  $("scaleHint").textContent = T("scaleHint", state.model, pct(s.threshold));
 }
 
 $("tSlider").oninput = (e) => { state.t = Number(e.target.value); updateBoard(false); updateScale(); };
@@ -553,30 +557,31 @@ $("clearAll").onclick = () => { if (state.revealed) return; state.decisions = cu
 
 /* ---------------- reveal & debrief ---------------- */
 function lessons(you, ctx) {
-  const L = [], cs = customers(), ps = probs(ctx.model), t = ctx.t;
+  const out = [], cs = customers(), ps = probs(ctx.model), t = ctx.t;
   const missedByRule = cs.filter((c, i) => c.churned && ps[i] < t);
   if (missedByRule.length) {
     const lowest = Math.min(...missedByRule.map((c) => c.p[ctx.model]));
-    L.push(`🎚️ <b>Your threshold (${pct(t)}) was too strict for ${missedByRule.map((c) => esc(c.name)).join(", ")}</b>: scored ${missedByRule.map((c) => pct(c.p[ctx.model])).join(", ")}, but left. A threshold at or below ${pct(Math.floor(lowest * 100) / 100)} would have flagged ${missedByRule.length > 1 ? "all of them" : "this customer"}. That is Recall: churners slip through when the bar is too high.`);
+    out.push(T("lThreshold", pct(t), names(missedByRule), missedByRule.map((c) => pct(c.p[ctx.model])).join(", "),
+                pct(Math.floor(lowest * 100) / 100), missedByRule.length > 1));
   }
   const falseFlags = cs.filter((c, i) => !c.churned && ps[i] >= t);
-  if (falseFlags.length) L.push(`🎯 <b>${falseFlags.map((c) => esc(c.name)).join(", ")} ${falseFlags.length > 1 ? "were" : "was"} flagged but stayed.</b> That is the Precision cost of your threshold: alarms on loyal customers.`);
+  if (falseFlags.length) out.push(T("lFalseFlags", names(falseFlags), falseFlags.length > 1));
   const fp = cs.filter((c, i) => state.decisions[i] !== "none" && !c.churned);
-  if (fp.length) L.push(`⚠️ <b>${money(you.wasted)} wasted</b> on ${fp.map((c) => esc(c.name)).join(", ")}: false positives, incentives for customers who were staying anyway.`);
+  if (fp.length) out.push(T("lWasted", money(you.wasted), names(fp)));
   const fn = cs.filter((c, i) => state.decisions[i] === "none" && c.churned);
-  if (fn.length) L.push(`❌ <b>${money(fn.reduce((s, c) => s + c.value, 0))} lost</b> because ${fn.map((c) => esc(c.name)).join(", ")} left without any retention attempt: false negatives.`);
+  if (fn.length) out.push(T("lLost", money(fn.reduce((s, c) => s + c.value, 0)), names(fn)));
   // Model choice, this week: each model's own expected-value plan, scored on the real outcomes.
   const roundNets = DATA.models.map((m) => [m.name, E.summarise(E.bestPlan(probs(m.name), values(), econ, BUDGET), churned(), values(), econ).net]);
   const cur = roundNets.find((r) => r[0] === ctx.model)[1];
   const top = roundNets.reduce((a, b) => (b[1] > a[1] ? b : a));
-  if (top[0] !== ctx.model && top[1] - cur > 0.5) L.push(`🧠 <b>Model choice this week:</b> following ${esc(top[0])}'s risks would have earned ${money(top[1] - cur)} more than following ${esc(ctx.model)}'s.`);
-  else L.push(`🧠 <b>Your model choice paid off this week:</b> no other model's plan beat ${esc(ctx.model)}'s (${money(cur, true)}).`);
+  if (top[0] !== ctx.model && top[1] - cur > 0.5) out.push(T("lModelWeek", esc(top[0]), money(top[1] - cur), esc(ctx.model)));
+  else out.push(T("lModelPaid", esc(ctx.model), money(cur, true)));
   // Model choice, at scale: each model at its own optimum, same incentive.
   const inc = incById[state.autoInc];
   const scaleNet = DATA.models.map((m) => [m.name, E.scaleStats(DATA.scale.models[m.name], m.threshold, inc).net]);
   const worst = scaleNet.reduce((a, b) => (b[1] < a[1] ? b : a)), best = scaleNet.reduce((a, b) => (b[1] > a[1] ? b : a));
-  L.push(`📊 <b>At scale, models matter:</b> a ${esc(inc.name.toLowerCase())} campaign across ${DATA.scale.n.toLocaleString()} customers earns ${money(best[1], true)} with ${esc(best[0])} but ${money(worst[1], true)} with ${esc(worst[0])}, each at its optimal threshold. One week of five customers is noisy; thousands of decisions are not.`);
-  return L;
+  out.push(T("lScale", esc(inc.name), DATA.scale.n.toLocaleString("en-US"), money(best[1], true), esc(best[0]), money(worst[1], true), esc(worst[0])));
+  return out;
 }
 function reveal() {
   if (state.revealed) return;
@@ -588,7 +593,7 @@ function reveal() {
   const perfectPlan = E.bestPlan(ch.map((x) => (x ? 1 : 0)), v, econ, BUDGET);
   const modelRes = E.summarise(modelPlan, ch, v, econ), perfect = E.summarise(perfectPlan, ch, v, econ);
   const score = E.successScore(you.net, perfect.net);
-  const [icon, title, message] = E.badge(score, you.net);
+  const [icon, title, message] = badgeText(E.badge(score, you.net));
   const entry = { week: state.week + 1, you, modelRes, perfect, score, title, icon, model: ctx.model, t: ctx.t, lessons: lessons(you, ctx) };
   state.history.push(entry);
 
@@ -596,22 +601,22 @@ function reveal() {
     const card = $("card" + i), res = $("res" + i), d = state.decisions[i], o = E.outcome(d, c.churned, c.value, econ);
     card.classList.remove("flip"); void card.offsetWidth; card.classList.add("flip");
     let cls, text;
-    if (c.churned && d !== "none") { cls = "tp"; text = `🚪 Was leaving · ✅ reached in time: expected saving ${money(o.true_savings)}`; say(i, c.lines.left_targeted); }
-    else if (c.churned) { cls = "fn"; text = `🚪 Left the bank · ❌ missed: lost ${money(o.lost_revenue)}`; say(i, c.lines.left); }
-    else if (d !== "none") { cls = "fp"; text = `🏠 Was staying · ⚠️ ${money(o.wasted)} wasted`; say(i, c.lines.stay_targeted); }
-    else { cls = "tn"; text = "🏠 Stayed · 👍 correctly left alone"; say(i, c.lines.stay); }
+    if (c.churned && d !== "none") { cls = "tp"; text = T("resTP", money(o.true_savings)); say(i, c.lines.left_targeted); }
+    else if (c.churned) { cls = "fn"; text = T("resFN", money(o.lost_revenue)); say(i, c.lines.left); }
+    else if (d !== "none") { cls = "fp"; text = T("resFP", money(o.wasted)); say(i, c.lines.stay_targeted); }
+    else { cls = "tn"; text = T("resTN"); say(i, c.lines.stay); }
     res.className = "result show " + cls; res.textContent = text;
   }, 260 * i));
 
   setTimeout(() => {
-    $("hudSaveK").textContent = "✅ Real savings"; $("hudSaveS").textContent = `wasted ${money(you.wasted)} · lost ${money(you.lost_revenue)}`;
+    $("hudSaveK").textContent = T("hudRealSave"); $("hudSaveS").textContent = T("hudRealSaveS", money(you.wasted), money(you.lost_revenue));
     tick($("hudSave"), you.true_savings, (x) => money(x));
-    $("hudRoiK").textContent = "📈 Real ROI"; $("hudRoiS").textContent = `net ${money(you.net, true)}`;
-    $("hudRoi").textContent = you.spend ? (you.roi >= 0 ? "+" : "") + pct(you.roi) : "n/a";
+    $("hudRoiK").textContent = T("hudRealRoi"); $("hudRoiS").textContent = T("netShort", money(you.net, true));
+    $("hudRoi").textContent = you.spend ? (you.roi >= 0 ? "+" : "") + pct(you.roi) : T("na");
     $("hudRoi").className = "v " + (you.net >= 0 ? "good" : "bad");
     updateBoard(false); updateHud();
-    $("reveal").textContent = "📋 Open the debrief"; $("reveal").onclick = () => openDebrief(entry, icon, title, message);
-    $("revealHint").textContent = "Outcomes revealed. Open the debrief for the lessons of the week.";
+    $("reveal").textContent = T("openDebrief"); $("reveal").onclick = () => openDebrief(entry, icon, title, message);
+    $("revealHint").textContent = T("revealedHint");
   }, 260 * cs.length + 250);
   setTimeout(() => openDebrief(entry, icon, title, message), 260 * cs.length + 900);
 }
@@ -620,7 +625,7 @@ function bars(rows) {
   const hasNeg = rows.some((r) => r[1] < 0), zero = hasNeg ? 50 : 0, span = hasNeg ? 50 : 100;
   return `<div class="mbars">${rows.map(([name, v, color]) => {
     const w = (Math.abs(v) / max) * span, left = v >= 0 ? zero : zero - w;
-    return `<div class="mbar"><span>${esc(name)}</span><div class="mtrack">${hasNeg ? `<div class="mzero" style="left:${zero}%"></div>` : ""}<div class="mfill" style="left:${left}%; width:0; background:${color}" data-w="${w}"></div></div><b style="text-align:right">${money(v, true)}</b></div>`;
+    return `<div class="mbar"><span>${esc(name)}</span><div class="mtrack">${hasNeg ? `<div class="mzero" style="left:${zero}%"></div>` : ""}<div class="mfill" style="left:${left}%; width:0; background:${color}" data-w="${w}"></div></div><b class="num" style="text-align:end">${money(v, true)}</b></div>`;
   }).join("")}</div>`;
 }
 function openDebrief(entry, icon, title, message) {
@@ -628,31 +633,31 @@ function openDebrief(entry, icon, title, message) {
   const roundNets = DATA.models.map((m) => [m.name, E.summarise(E.bestPlan(probs(m.name), values(), econ, BUDGET), churned(), values(), econ).net, m.color]);
   const C = 2 * Math.PI * 42;
   $("debrief").innerHTML = `
-    <div class="eyebrow">Week ${entry.week} debrief · model ${esc(entry.model)} · threshold ${pct(entry.t)}</div>
+    <div class="eyebrow">${T("debEyebrow", entry.week, esc(entry.model), pct(entry.t))}</div>
     <div class="verdict">
       <svg class="ring" viewBox="0 0 104 104"><circle class="bg" cx="52" cy="52" r="42"/><circle class="fg" id="ringFg" cx="52" cy="52" r="42" stroke-dasharray="${C}" stroke-dashoffset="${C}"/><text x="52" y="52">${entry.score}</text></svg>
-      <div><h2 class="${won ? "win" : "lose"}" style="margin:0">${won ? "Victory" : "Defeat"} · ${icon} ${esc(title)}</h2>
-        <div class="lead" style="font-size:15px">${esc(message)} Success score ${entry.score}/100 = your net value as a share of the best achievable this week.</div></div>
+      <div><h2 class="${won ? "win" : "lose"}" style="margin:0">${won ? T("victory") : T("defeat")} · ${icon} ${esc(title)}</h2>
+        <div class="lead" style="font-size:15px">${esc(message)} ${T("scoreLine", entry.score)}</div></div>
     </div>
     <div class="kpis">
-      <div class="stat"><div class="k">✅ True savings</div><div class="v" style="color:var(--green)">${money(entry.you.true_savings)}</div><div class="s">churners reached × success × value</div></div>
-      <div class="stat"><div class="k">⚠️ Wasted budget</div><div class="v" style="color:var(--amber)">${money(entry.you.wasted)}</div><div class="s">false positives</div></div>
-      <div class="stat"><div class="k">❌ Lost revenue</div><div class="v" style="color:var(--red)">${money(entry.you.lost_revenue)}</div><div class="s">missed churners + failed incentives</div></div>
-      <div class="stat"><div class="k">📈 Net ROI</div><div class="v" style="color:${entry.you.net >= 0 ? "var(--green)" : "var(--red)"}">${entry.you.spend ? (entry.you.roi >= 0 ? "+" : "") + pct(entry.you.roi) : "n/a"}</div><div class="s">net ${money(entry.you.net, true)}</div></div>
+      <div class="stat"><div class="k">${T("kSavings")}</div><div class="v num" style="color:var(--green)">${money(entry.you.true_savings)}</div><div class="s">${T("kSavingsS")}</div></div>
+      <div class="stat"><div class="k">${T("kWasted")}</div><div class="v num" style="color:var(--amber)">${money(entry.you.wasted)}</div><div class="s">${T("kWastedS")}</div></div>
+      <div class="stat"><div class="k">${T("kLost")}</div><div class="v num" style="color:var(--red)">${money(entry.you.lost_revenue)}</div><div class="s">${T("kLostS")}</div></div>
+      <div class="stat"><div class="k">${T("kRoi")}</div><div class="v num" style="color:${entry.you.net >= 0 ? "var(--green)" : "var(--red)"}">${entry.you.spend ? (entry.you.roi >= 0 ? "+" : "") + pct(entry.you.roi) : T("na")}</div><div class="s">${T("netShort", money(entry.you.net, true))}</div></div>
     </div>
     <div class="two">
-      <div><div class="panel-title"><span>What the week teaches</span></div><ul class="lessons">${entry.lessons.map((l) => `<li>${l}</li>`).join("")}</ul></div>
+      <div><div class="panel-title"><span>${T("weekTeaches")}</span></div><ul class="lessons">${entry.lessons.map((l) => `<li>${l}</li>`).join("")}</ul></div>
       <div>
-        <div class="panel-title"><span>You vs the benchmarks (this week)</span></div>
-        ${bars([["You", entry.you.net, "#5aa9ff"], [`${entry.model}'s plan`, entry.modelRes.net, modelByName[entry.model].color], ["Perfect hindsight", entry.perfect.net, "#8a8984"]])}
-        <div class="panel-title" style="margin-top:16px"><span>Every model's own plan, real outcomes</span></div>
+        <div class="panel-title"><span>${T("youVs")}</span></div>
+        ${bars([[T("you"), entry.you.net, "#5aa9ff"], [T("planOf", entry.model), entry.modelRes.net, modelByName[entry.model].color], [T("hindsight"), entry.perfect.net, "#8a8984"]])}
+        <div class="panel-title" style="margin-top:16px"><span>${T("everyModel")}</span></div>
         ${bars(roundNets)}
-        <div class="foot">A model's plan maximises expected value from its own risk scores within the budget. Hindsight knows who left.</div>
+        <div class="foot">${T("foot")}</div>
       </div>
     </div>
     <div class="row" style="justify-content:flex-end; margin-top:16px">
-      <button class="btn ghost" id="closeDeb">Back to the board</button>
-      <button class="btn primary big" id="nextWeek">${last ? "🏁 See your final report" : "Next week →"}</button>
+      <button class="btn ghost" id="closeDeb">${T("backBoard")}</button>
+      <button class="btn primary big" id="nextWeek">${last ? T("finalBtn") : T("nextWeek")}</button>
     </div>`;
   $("overlay").classList.add("show");
   bringIntoView($("overlay"));
@@ -670,42 +675,36 @@ function finalReport() {
   const H = state.history, net = H.reduce((s, h) => s + h.you.net, 0), avg = Math.round(H.reduce((s, h) => s + h.score, 0) / H.length);
   const perfect = H.reduce((s, h) => s + h.perfect.net, 0), model = H.reduce((s, h) => s + h.modelRes.net, 0);
   const wasted = H.reduce((s, h) => s + h.you.wasted, 0), lost = H.reduce((s, h) => s + h.you.lost_revenue, 0);
-  const [icon, title, message] = E.badge(avg, net);
+  const [icon, title, message] = badgeText(E.badge(avg, net));
   $("finalBody").innerHTML = `
-    <div class="eyebrow">Season report · ${H.length} weeks</div>
+    <div class="eyebrow">${T("seasonEyebrow", H.length)}</div>
     <h1>${icon} ${esc(title)}</h1>
-    <p class="lead">${esc(message)} Average success score <b>${avg}/100</b>.</p>
+    <p class="lead">${esc(message)} ${T("avgScore", avg)}</p>
     <div class="kpis">
-      <div class="stat"><div class="k">Your net value</div><div class="v" style="color:${net >= 0 ? "var(--green)" : "var(--red)"}">${money(net, true)}</div><div class="s">over ${H.length} weeks</div></div>
-      <div class="stat"><div class="k">Following the models</div><div class="v">${money(model, true)}</div><div class="s">each week's chosen model's plan</div></div>
-      <div class="stat"><div class="k">Perfect hindsight</div><div class="v">${money(perfect, true)}</div><div class="s">the ceiling</div></div>
-      <div class="stat"><div class="k">Wasted · lost</div><div class="v" style="font-size:19px">${money(wasted)} · ${money(lost)}</div><div class="s">false positives · false negatives</div></div>
+      <div class="stat"><div class="k">${T("fYourNet")}</div><div class="v num" style="color:${net >= 0 ? "var(--green)" : "var(--red)"}">${money(net, true)}</div><div class="s">${T("fOver", H.length)}</div></div>
+      <div class="stat"><div class="k">${T("fModels")}</div><div class="v num">${money(model, true)}</div><div class="s">${T("fModelsS")}</div></div>
+      <div class="stat"><div class="k">${T("fHindsight")}</div><div class="v num">${money(perfect, true)}</div><div class="s">${T("fHindsightS")}</div></div>
+      <div class="stat"><div class="k">${T("fWastedLost")}</div><div class="v num" style="font-size:19px">${money(wasted)} · ${money(lost)}</div><div class="s">${T("fWastedLostS")}</div></div>
     </div>
-    <div class="panel-title"><span>Five things a Chief Retention Officer now knows</span></div>
-    <ul class="lessons">
-      <li>📈 <b>A churn probability is a ranking, not a verdict.</b> Better models (higher ROC-AUC) put real churners nearer the top, so the same budget reaches more of them.</li>
-      <li>🎚️ <b>The threshold is a business decision.</b> 50% is a convention; with ~20% churners, a lower, cross-validated threshold catches far more leavers.</li>
-      <li>⚖️ <b>Precision protects the budget, Recall protects revenue.</b> You cannot maximise both; choose the trade-off that makes money.</li>
-      <li>🎲 <b>Five customers are noise, two thousand are evidence.</b> Judge models on cross-validation and at scale, not on one lucky week.</li>
-      <li>🧪 <b>Never tune on the test set.</b> These outcomes come from held-out customers the models never saw, which is why they are believable.</li>
-    </ul>
-    <div class="row" style="justify-content:flex-end; margin-top:16px"><button class="btn primary big" id="again">🔁 Play again</button></div>`;
+    <div class="panel-title"><span>${T("fiveThings")}</span></div>
+    <ul class="lessons">${T("takeaways").map((x) => `<li>${x}</li>`).join("")}</ul>
+    <div class="row" style="justify-content:flex-end; margin-top:16px"><button class="btn primary big" id="again">${T("playAgain")}</button></div>`;
   show("final");
   $("again").onclick = () => { state.history = []; startWeek(0); show("game"); };
 }
 function startWeek(w) {
   state.week = w; state.revealed = false; state.selected = null;
   state.decisions = customers().map(() => "none");
-  $("weekLabel").textContent = `Week ${w + 1} of ${DATA.rounds.length}`;
-  $("reveal").textContent = "🎲 Reveal what happened"; $("reveal").onclick = reveal;
-  $("revealHint").textContent = "Click a card to talk to the customer, then pick an incentive with the buttons.";
+  $("weekLabel").textContent = T("weekOf", w + 1, DATA.rounds.length);
+  $("reveal").textContent = T("revealBtn"); $("reveal").onclick = reveal;
+  $("revealHint").textContent = T("revealHint");
   buildBoard(); renderChips(); updateBoard(false); updateHud(); updateScale();
   $("tSlider").value = state.t;
 }
 
 renderStory();
 startWeek(0);
-window.__game = { state, reveal, choose, switchModel, startWeek, DATA };  // for automated checks
+window.__game = { state, reveal, choose, switchModel, startWeek, DATA, LANG };  // for automated checks
 })();
 </script>
 </body>

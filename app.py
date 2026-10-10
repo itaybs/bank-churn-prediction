@@ -32,7 +32,16 @@ from churn.evaluation import build_comparison_table
 from churn.explain import explain_prediction
 from churn.formatting import fmt3, fmt3_signed
 from churn.story_game import assets_fingerprint, build_payload, render_html
-from churn.glossary import GLOSSARY, HYPERPARAMETERS, METRIC_HELP, define
+from churn.glossary import (
+    GLOSSARY,
+    HYPERPARAMETERS,
+    HYPERPARAMETERS_HE,
+    METRIC_HELP,
+    METRIC_HELP_HE,
+    define,
+    term_name,
+)
+from churn.i18n import LANGUAGES, PAGE_SUBTITLES_HE, RTL, page_labels, tr
 from churn.insights import (
     GAP_STD_RULE,
     MIN_SEGMENT_N,
@@ -70,18 +79,7 @@ from churn.tuning import (
 from churn.validation import CV_METRICS, format_mean_std, summarize_cv
 
 # --- Constants ------------------------------------------------------------------
-PAGES = [
-    "0. Executive Briefing & Journey Map",
-    "1. Project Overview & Data Inspection",
-    "2. Preprocessing & Pipeline Architecture",
-    "3. Model Explorer & Comparison",
-    "4. Hyperparameter Tuning: Before vs After",
-    "5. Cross-Validation & Robustness",
-    "6. Feature Importance",
-    "7. Interactive Churn Prediction Tool",
-    "8. Methodology & Future Roadmap",
-    "9. The Chief Retention Officer: A Machine Learning Decision Story",
-]
+# Navigation labels and page titles (English and Hebrew) live in churn/i18n.py.
 # Reference categorical palette, slots 1-5 in fixed order (validated together for colour-vision deficiency).
 MODEL_COLORS = {"Logistic Regression": "#2a78d6", "Random Forest": "#eb6834", "XGBoost": "#1baf7a",
                 "LightGBM": "#eda100", "CatBoost": "#e87ba4"}
@@ -125,8 +123,9 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-html, body, .stApp, .stApp *:not([data-testid="stIconMaterial"]) { font-family: 'Inter', sans-serif; }
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+/* Inter has no Hebrew glyphs: the browser falls back to Assistant for Hebrew text. */
+html, body, .stApp, .stApp *:not([data-testid="stIconMaterial"]) { font-family: 'Inter', 'Assistant', sans-serif; }
 .block-container { padding-top: 3.2rem; max-width: 1280px; }
 h1, h2, h3 { letter-spacing: -0.01em; }
 .page-kicker { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; margin-bottom: -0.4rem; }
@@ -134,17 +133,17 @@ h1, h2, h3 { letter-spacing: -0.01em; }
 .wwh h4 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.65; margin: 0 0 0.35rem 0; }
 .wwh p { margin: 0; font-size: 0.94rem; line-height: 1.5; }
 .pill { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
-        border: 1px solid rgba(128,128,128,0.35); margin-right: 0.35rem; }
+        border: 1px solid rgba(128,128,128,0.35); margin-inline-end: 0.35rem; }
 .pill.blue { background: rgba(42,120,214,0.14); border-color: rgba(42,120,214,0.45); }
 .pill.orange { background: rgba(235,104,52,0.14); border-color: rgba(235,104,52,0.45); }
 .pill.aqua { background: rgba(27,175,122,0.14); border-color: rgba(27,175,122,0.45); }
 .pill.yellow { background: rgba(237,161,0,0.14); border-color: rgba(237,161,0,0.5); }
 .pill.magenta { background: rgba(232,123,164,0.16); border-color: rgba(232,123,164,0.5); }
-.verdict { border-radius: 12px; padding: 1rem 1.2rem; border: 1px solid rgba(128,128,128,0.25); border-left-width: 6px; margin-bottom: 0.8rem; }
-.verdict.high { border-left-color: #e34948; background: rgba(227,73,72,0.08); }
-.verdict.elevated { border-left-color: #eda100; background: rgba(237,161,0,0.09); }
-.verdict.low { border-left-color: #1baf7a; background: rgba(27,175,122,0.08); }
-.verdict.best { border-left-color: #2a78d6; background: rgba(42,120,214,0.07); }
+.verdict { border-radius: 12px; padding: 1rem 1.2rem; border: 1px solid rgba(128,128,128,0.25); border-inline-start-width: 6px; margin-bottom: 0.8rem; }
+.verdict.high { border-inline-start-color: #e34948; background: rgba(227,73,72,0.08); }
+.verdict.elevated { border-inline-start-color: #eda100; background: rgba(237,161,0,0.09); }
+.verdict.low { border-inline-start-color: #1baf7a; background: rgba(27,175,122,0.08); }
+.verdict.best { border-inline-start-color: #2a78d6; background: rgba(42,120,214,0.07); }
 .verdict h3 { margin: 0 0 0.25rem 0; font-size: 1.3rem; }
 .verdict p { margin: 0; opacity: 0.88; }
 section[data-testid="stSidebar"] .stRadio label p { font-size: 0.93rem; }
@@ -160,7 +159,7 @@ section[data-testid="stSidebar"] .stRadio label p { font-size: 0.93rem; }
 .mission .tag { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.65; }
 .mission h4 { margin: 0.2rem 0 0.45rem 0; font-size: 1.08rem; }
 .mission p, .mission li { font-size: 0.92rem; line-height: 1.5; margin: 0; }
-.mission ul { margin: 0.35rem 0 0 1.1rem; padding: 0; }
+.mission ul { margin: 0.35rem 0 0 0; margin-inline-start: 1.1rem; padding: 0; }
 .trigger { border-radius: 12px; padding: 0.8rem 1rem; border: 1px solid rgba(128,128,128,0.25); height: 100%; }
 .trigger .big { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
 .trigger .lbl { font-size: 0.82rem; opacity: 0.75; }
@@ -218,17 +217,23 @@ def boosting_gif() -> Path:
 
 
 # --- Shared UI helpers ---------------------------------------------------------------
-def page_header(index: int, subtitle: str) -> None:
-    number, title = PAGES[index].split(". ", 1)
-    st.markdown(f'<div class="page-kicker">Section {number}</div>', unsafe_allow_html=True)
+def page_header(index: int, subtitle: str, **fmt) -> None:
+    """Kicker, title and subtitle in the selected language (fmt fills the Hebrew subtitle's placeholders)."""
+    number, title = PAGE_LABELS[index].split(". ", 1)
+    if LANG == "he":
+        subtitle = PAGE_SUBTITLES_HE[index].format(**fmt)
+    st.markdown(f'<div class="page-kicker">{tr("section", LANG)} {number}</div>', unsafe_allow_html=True)
     st.title(title)
     st.markdown(f'<div class="page-sub">{subtitle}</div>', unsafe_allow_html=True)
+    if LANG == "he" and index not in (0, 9):  # sections 0 and 9 are fully translated
+        st.caption(tr("english_note", LANG))
 
 
 def what_why_how(what: str, why: str, how: str) -> None:
     """The three-part explanation used in every section."""
     cols = st.columns(3)
-    for col, (label, text) in zip(cols, [("What we did", what), ("Why it matters", why), ("How to read it", how)]):
+    labels = [tr(k, LANG) for k in ("what_we_did", "why_it_matters", "how_to_read")]
+    for col, (label, text) in zip(cols, zip(labels, [what, why, how])):
         with col.container(border=True):
             st.markdown(f'<div class="wwh"><h4>{label}</h4><p>{text}</p></div>', unsafe_allow_html=True)
 
@@ -258,10 +263,10 @@ def column_help(columns) -> dict:
     config_ = {}
     for col in columns:
         base = str(col).split(" ")[0].replace("-", "_")
-        if base in METRIC_HELP:
-            config_[col] = st.column_config.Column(help=METRIC_HELP[base])
+        if base in MH:
+            config_[col] = st.column_config.Column(help=MH[base])
         elif col in ("Threshold", "Model", "Hyperparameter"):
-            config_[col] = st.column_config.Column(help=define({"Threshold": "Threshold", "Model": "Baseline",
+            config_[col] = st.column_config.Column(help=D({"Threshold": "Threshold", "Model": "Baseline",
                                                                   "Hyperparameter": "Hyperparameter"}[col]))
     return config_
 
@@ -273,8 +278,8 @@ def metrics_dataframe(table: pd.DataFrame, axis: int = 0) -> None:
 
 def key_terms(*terms: str) -> None:
     """A collapsible panel defining the statistical terms used in a section."""
-    with st.expander("ℹ️ Key terms in this section"):
-        st.markdown("\n".join(f"- **{t.replace('_', '-')}:** {define(t)}" for t in terms))
+    with st.expander(tr("key_terms", LANG)):
+        st.markdown("\n".join(f"- **{term_name(t, LANG)}:** {D(t)}" for t in terms))
 
 
 def display_value(col: str, value) -> str:
@@ -307,40 +312,71 @@ def confusion_figure(cm: np.ndarray, title: str) -> go.Figure:
 
 
 # --- Sidebar ---------------------------------------------------------------------
+def _forget_page_widgets() -> None:
+    """The navigation radio is keyed per language; dropping it lets the new one start at page_idx."""
+    for code in LANGUAGES:
+        st.session_state.pop(f"page_{code}", None)
+
+
 with st.sidebar:
-    st.markdown("## 📊 Churn Analytics")
-    st.caption("Bank customer churn · Logistic Regression · Random Forest · XGBoost · LightGBM · CatBoost")
-    page = st.radio("Navigate", PAGES, key="page", help="Each section explains what was done, why, and how to read it.")
+    lang_name = st.radio("🌐 Language · שפה", list(LANGUAGES.values()), horizontal=True, key="lang",
+                         on_change=_forget_page_widgets,
+                         help="Interface language. Hebrew switches the layout to right-to-left. · "
+                              "שפת הממשק. עברית מעבירה את הפריסה לימין-לשמאל.")
+    LANG = {name: code for code, name in LANGUAGES.items()}[lang_name]
+    PAGE_LABELS = page_labels(LANG)
+    st.markdown(f"## {tr('app_name', LANG)}")
+    st.caption(tr("app_caption", LANG))
+    page_label = st.radio(tr("navigate", LANG), PAGE_LABELS, index=st.session_state.setdefault("page_idx", 0),
+                          key=f"page_{LANG}", help=tr("navigate_help", LANG))
+    st.session_state["page_idx"] = PAGE_IDX = PAGE_LABELS.index(page_label)
     st.divider()
-    st.markdown("**Model configuration**")
+    st.markdown(f"**{tr('model_config', LANG)}**")
     weighting_label = st.radio(
-        "Class balancing / weighting", list(WEIGHTING), key="weighting",
-        help=(
-            "Balanced: errors on churners count more during training (inverse class frequency). Logistic "
-            "Regression, Random Forest and LightGBM use class_weight='balanced'; XGBoost uses scale_pos_weight = "
-            "#stayed / #churned from the training labels; CatBoost uses auto_class_weights='Balanced'. Models are "
-            "retrained the first time you switch."
-        ),
+        tr("weighting", LANG), list(WEIGHTING), key="weighting", format_func=lambda k: tr(k, LANG),
+        help=tr("weighting_help", LANG),
     )
     class_weight = WEIGHTING[weighting_label]
+    WEIGHT_SHORT = tr(weighting_label, LANG).split(" (")[0]
     strategy = st.radio(
-        "Threshold strategy", STRATEGIES, key="strategy",
-        help=(
-            "Default: P(churn) ≥ 0.5. CV-optimized: per-model threshold that maximised F1 in 5-fold "
-            "cross-validation on the training set (no test data used). Custom: use the slider."
-        ),
+        tr("strategy", LANG), STRATEGIES, key="strategy", format_func=lambda k: tr(k, LANG),
+        help=tr("strategy_help", LANG),
     )
     custom_t = st.slider(
-        "Decision threshold (custom)", 0.10, 0.90, 0.50, 0.01, key="custom_t",
-        disabled=strategy != STRATEGY_CUSTOM,
-        help="Active only with the Custom strategy. A customer is flagged when P(churn) ≥ threshold. "
-             "Lower threshold → more churners caught (Recall ↑) but more false alarms (Precision ↓).",
+        tr("custom_threshold", LANG), 0.10, 0.90, 0.50, 0.01, key="custom_t",
+        disabled=strategy != STRATEGY_CUSTOM, help=tr("custom_threshold_help", LANG),
+    )
+
+# Definitions, metric tooltips and hyperparameter explanations in the selected language.
+MH = METRIC_HELP_HE if LANG == "he" else METRIC_HELP
+HP = HYPERPARAMETERS_HE if LANG == "he" else HYPERPARAMETERS
+
+
+def D(term: str) -> str:
+    return define(term, LANG)
+
+
+if LANG in RTL:
+    st.markdown(
+        """
+<style>
+[data-testid="stMain"] .block-container, [data-testid="stSidebarContent"] { direction: rtl; text-align: right; }
+/* Numbers, charts, tables and code read left to right in Hebrew too. */
+[data-testid="stMain"] :is([data-testid="stPlotlyChart"], [data-testid="stDataFrame"], [data-testid="stTable"],
+  [data-testid="stGraphVizChart"], [data-testid="stImage"], [data-testid="stCode"], [data-testid="stSlider"],
+  [data-testid="stLatex"], pre, code),
+[data-testid="stSidebarContent"] [data-testid="stSlider"] { direction: ltr; text-align: left; }
+[data-testid="stMetricValue"], [data-testid="stMetricDelta"] { unicode-bidi: plaintext; }
+.page-kicker, .hero .eyebrow, .mission .tag, .wwh h4 { letter-spacing: 0.02em; }
+</style>
+""",
+        unsafe_allow_html=True,
     )
 
 try:
     A = get_analysis(class_weight)
 except (FileNotFoundError, ValueError) as error:
-    st.error(f"The dataset could not be loaded or validated: {error}")
+    st.error(tr("dataset_error", LANG, error=error))
     st.stop()
 
 EVALS = A.evaluate_strategy(strategy, custom_t)
@@ -352,19 +388,16 @@ with st.sidebar:
         st.markdown(f'<span class="pill {PILL_CLASS[name]}">{name}</span><b>t = {fmt3(THRESHOLDS[name])}</b>',
                     unsafe_allow_html=True)
     if strategy == STRATEGY_CUSTOM:
-        st.warning("Exploratory mode: choosing a threshold by watching test-set metrics is test-set tuning. "
-                   "Use the CV-optimized strategy for an honest estimate.", icon="⚠️")
+        st.warning(tr("custom_warning", LANG), icon="⚠️")
     st.divider()
-    st.caption(
-        f"Dataset: `{config.DATA_PATH.name}` · {len(A.df):,} customers · train {len(A.X_train):,} / "
-        f"test {len(A.X_test):,} · {config.CV_FOLDS}-fold CV · seed {config.RANDOM_STATE}"
-    )
-    st.caption("Educational project. Not validated for production banking decisions.")
-    with st.expander("📖 Glossary of terms"):
-        st.markdown("\n".join(f"- **{t.replace('_', '-')}:** {d}" for t, d in GLOSSARY.items()))
+    st.caption(tr("dataset_caption", LANG, file=config.DATA_PATH.name, n=len(A.df), train=len(A.X_train),
+                  test=len(A.X_test), folds=config.CV_FOLDS, seed=config.RANDOM_STATE))
+    st.caption(tr("educational", LANG))
+    with st.expander(tr("glossary", LANG)):
+        st.markdown("\n".join(f"- **{term_name(t, LANG)}:** {D(t)}" for t in GLOSSARY))
 
 CONFIG_LINE = (
-    f"Configuration: weighting **{weighting_label.split(' (')[0]}** · strategy **{strategy}** · thresholds "
+    f"Configuration: weighting **{WEIGHT_SHORT}** · strategy **{strategy}** · thresholds "
     + " · ".join(f"{m} **{fmt3(t)}**" for m, t in THRESHOLDS.items())
 )
 
@@ -381,14 +414,12 @@ def _trigger(feature: str) -> dict:
             "hi_n": int(stats.loc[hi, "n"]), "ratio": stats.loc[hi, "rate"] / stats.loc[lo, "rate"]}
 
 
-def _go_to(target: str) -> None:
-    st.session_state["page"] = target
+def _go_to(index: int) -> None:
+    st.session_state["page_idx"] = index
+    _forget_page_widgets()
 
 
-JOURNEY = [
-    ("Data Inspection", "🔍", 1), ("Preprocessing", "🧱", 2), ("Base Models", "📐", 3),
-    ("Advanced Boosters", "🚀", 3), ("Tuning", "🎛️", 4), ("Final Deployment", "🎯", 7),
-]
+JOURNEY = [("🔍", 1), ("🧱", 2), ("📐", 3), ("🚀", 3), ("🎛️", 4), ("🎯", 7)]  # icon, target section
 
 
 def page_briefing() -> None:
@@ -399,72 +430,51 @@ def page_briefing() -> None:
     churned = int(A.df[config.TARGET].sum())
 
     st.markdown(
-        f"""<div class="hero"><div class="eyebrow">Executive briefing · bank customer churn</div>
-<h2>{A.df[config.TARGET].mean():.1%} of customers left the bank. Can we see it coming?</h2>
-<p>{churned:,} of {len(A.df):,} customers exited. This project builds and stress-tests {len(A.models)} machine-learning
-models that rank every customer by churn risk, so a retention team can act <i>before</i> revenue walks out of the door.</p></div>""",
+        f"""<div class="hero"><div class="eyebrow">{tr("hero_eyebrow", LANG)}</div>
+<h2>{tr("hero_title", LANG, rate=f"{A.df[config.TARGET].mean():.1%}")}</h2>
+<p>{tr("hero_body", LANG, churned=churned, n=len(A.df), models=len(A.models))}</p></div>""",
         unsafe_allow_html=True,
     )
+    for col, n in zip(st.columns(3, gap="medium"), (1, 2, 3)):
+        body = tr(f"m{n}_body", LANG)
+        col.markdown(f"""<div class="mission m{n}"><div class="tag">{tr(f"m{n}_tag", LANG)}</div>
+<h4>{tr(f"m{n}_title", LANG)}</h4>{body if body.startswith("<p>") else f"<p>{body}</p>"}</div>""",
+                     unsafe_allow_html=True)
 
-    m1, m2, m3 = st.columns(3, gap="medium")
-    m1.markdown(
-        """<div class="mission m1"><div class="tag">The mission · where we are diving</div>
-<h4>Understand and predict churn</h4>
-<p>Every customer who leaves takes their balances, products and future revenue with them. Retaining a customer is
-typically cheaper than acquiring a new one, so knowing <b>who is likely to leave</b> turns churn from a loss we
-report into a risk we can manage.</p></div>""", unsafe_allow_html=True)
-    m2.markdown(
-        """<div class="mission m2"><div class="tag">The investigation · what we look for</div>
-<h4>Behavioural and demographic triggers</h4>
-<p>Which customer signals separate leavers from stayers?</p>
-<ul><li>Number of products held</li><li>Activity status</li><li>Age and geography</li>
-<li>Balance patterns</li></ul></div>""", unsafe_allow_html=True)
-    m3.markdown(
-        """<div class="mission m3"><div class="tag">Success criteria · how we will know</div>
-<h4>Rigour, not flattering accuracy</h4>
-<p>~80% accuracy is free (predict "stays" for everyone), so it proves nothing. Instead:</p>
-<ul><li><b>ROC-AUC</b>: ranking quality, threshold-free</li><li><b>5-fold cross-validation</b>: mean ± std, not one lucky split</li>
-<li><b>Threshold tuning</b> on training data to trade Precision for Recall</li></ul></div>""", unsafe_allow_html=True)
-
-    st.subheader("Headline results")
+    st.subheader(tr("headline", LANG))
     k = st.columns(4)
-    k[0].metric("Selected model", best, border=True,
-                help="Highest mean ROC-AUC in 5-fold cross-validation on the training set (the test set only confirms).")
-    k[1].metric("CV ROC-AUC (mean ± std)", f"{fmt3(cv.loc[best, 'ROC_AUC mean'])} ± {fmt3(cv.loc[best, 'ROC_AUC std'])}",
-                border=True, help=f"Mean ± std over {config.CV_FOLDS} folds. " + define("ROC_AUC"))
-    k[2].metric("Churners caught (Recall)", f"{tuned.metrics['Recall']:.0%}", border=True,
-                delta=f"{(tuned.metrics['Recall'] - default.metrics['Recall']) * 100:+.0f} pp vs 0.5 cutoff",
-                help=f"Test-set Recall at the CV-optimized threshold ({fmt3(tuned.threshold)}) vs the default 0.5. "
-                     + define("Recall"))
-    k[3].metric("Flags that are real churners", f"{tuned.metrics['Precision']:.0%}", border=True,
-                delta=f"{(tuned.metrics['Precision'] - default.metrics['Precision']) * 100:+.0f} pp vs 0.5 cutoff",
-                delta_color="off",
-                help="Test-set Precision at the CV-optimized threshold: the price of catching more churners. "
-                     + define("Precision"))
-    st.caption(f"Live values for the current sidebar configuration (weighting: {weighting_label.split(' (')[0]}). "
-               "Recall and Precision are measured on the untouched test set.")
+    pp = lambda metric: tr("pp_vs_default", LANG, d=(tuned.metrics[metric] - default.metrics[metric]) * 100)
+    k[0].metric(tr("k_selected", LANG), best, border=True, help=tr("k_selected_help", LANG))
+    std = fmt3(cv.loc[best, "ROC_AUC std"])  # in the label, so the value fits a quarter-width tile on any screen
+    k[1].metric(tr("k_auc", LANG, std=std), fmt3(cv.loc[best, "ROC_AUC mean"]), border=True,
+                help=tr("k_auc_help", LANG, folds=config.CV_FOLDS, std=std) + D("ROC_AUC"))
+    k[2].metric(tr("k_recall", LANG), f"{tuned.metrics['Recall']:.0%}", border=True, delta=pp("Recall"),
+                help=tr("k_recall_help", LANG, t=fmt3(tuned.threshold)) + D("Recall"))
+    k[3].metric(tr("k_precision", LANG), f"{tuned.metrics['Precision']:.0%}", border=True, delta=pp("Precision"),
+                delta_color="off", help=tr("k_precision_help", LANG) + D("Precision"))
+    st.caption(tr("live_caption", LANG, w=WEIGHT_SHORT))
 
-    st.subheader("What the data says: churn triggers")
-    st.markdown("Churn rate by segment in the **training set** (segments with fewer than "
-                f"{MIN_SEGMENT_N} customers excluded). These are associations, not proven causes.")
-    labels = {"NumOfProducts": ("Products held", lambda v: f"{v} product{'s' if v != 1 else ''}"),
-              "IsActiveMember": ("Activity status", lambda v: "Inactive" if v == 0 else "Active"),
-              "Age": ("Age band", lambda v: f"Age {v}"), "Geography": ("Geography", str)}
+    st.subheader(tr("triggers", LANG))
+    st.markdown(tr("triggers_intro", LANG, n=MIN_SEGMENT_N))
+    labels = {
+        "NumOfProducts": (tr("t_products", LANG), lambda v: tr("products_1", LANG) if v == 1 else tr("products_n", LANG, v=v)),
+        "IsActiveMember": (tr("t_activity", LANG), lambda v: tr("inactive" if v == 0 else "active", LANG)),
+        "Age": (tr("t_age", LANG), lambda v: tr("age_v", LANG, v=v)),
+        "Geography": (tr("t_geo", LANG), lambda v: tr(f"geo_{v}", LANG)),
+    }
     cols = st.columns(len(labels), gap="small")
     for col, (feature, (title, fmt)) in zip(cols, labels.items()):
         t = _trigger(feature)
-        col.markdown(
-            f"""<div class="trigger"><div class="lbl">{title}</div><div class="big">{t['hi_rate']:.0%}</div>
-<div class="lbl">churn for <b>{fmt(t['hi'])}</b> (n = {t['hi_n']:,})<br>vs {t['lo_rate']:.0%} for {fmt(t['lo'])}
-· <b>{t['ratio']:.1f}×</b></div></div>""", unsafe_allow_html=True)
+        line = tr("trigger_line", LANG, hi=fmt(t["hi"]), n=t["hi_n"], lo_rate=f"{t['lo_rate']:.0%}", lo=fmt(t["lo"]),
+                  ratio=t["ratio"])
+        col.markdown(f"""<div class="trigger"><div class="lbl">{title}</div><div class="big">{t['hi_rate']:.0%}</div>
+<div class="lbl">{line}</div></div>""", unsafe_allow_html=True)
 
-    st.subheader("Analytical journey map")
-    st.markdown("Six stages from raw data to a decision tool. Select a stage to see what was done and what was "
-                "measured, then jump to the full evidence.")
-    names = [name for name, _, _ in JOURNEY]
-    stage = st.segmented_control("Stage", names, default=names[0], key="journey_stage",
-                                 help="Each stage links to the dashboard section with the full analysis.",
-                                 label_visibility="collapsed") or names[0]
+    st.subheader(tr("journey", LANG))
+    st.markdown(tr("journey_intro", LANG))
+    names = tr("stages", LANG)
+    stage = st.segmented_control("Stage", names, default=names[0], key=f"journey_stage_{LANG}",
+                                 help=tr("journey_help", LANG), label_visibility="collapsed") or names[0]
     current = names.index(stage)
 
     fig = go.Figure()
@@ -477,14 +487,15 @@ report into a risk we can manage.</p></div>""", unsafe_allow_html=True)
         marker=dict(size=[46 if i == current else 34 for i in range(len(JOURNEY))],
                     color=["#2a78d6" if i <= current else "rgba(138,137,132,0.25)" for i in range(len(JOURNEY))],
                     line=dict(width=3, color="white")),
-        text=[icon for _, icon, _ in JOURNEY], textfont=dict(size=18), textposition="middle center",
-        hovertext=[f"Step {i + 1}: {n}" for i, n in enumerate(names)], hoverinfo="text", showlegend=False,
+        text=[icon for icon, _ in JOURNEY], textfont=dict(size=18), textposition="middle center",
+        hovertext=[f"{tr('step', LANG)} {i + 1}: {n}" for i, n in enumerate(names)], hoverinfo="text", showlegend=False,
     )
     for i, n in enumerate(names):
         label = f"{i + 1}<br>{n.replace(' ', '<br>', 1)}"  # two short lines, so labels fit on phones too
         fig.add_annotation(x=i, y=-0.68, text=f"<b>{label}</b>" if i == current else label,
                            showarrow=False, font=dict(size=12))
-    fig.update_layout(xaxis=dict(visible=False, range=[-0.5, len(JOURNEY) - 0.5]),
+    # Hebrew reads right to left: the journey runs from right to left as well.
+    fig.update_layout(xaxis=dict(visible=False, range=[-0.5, len(JOURNEY) - 0.5], autorange="reversed" if LANG in RTL else None),
                       yaxis=dict(visible=False, range=[-1.15, 0.5]), plot_bgcolor="rgba(0,0,0,0)")
     plotly(fig, 190)
 
@@ -493,41 +504,24 @@ report into a risk we can manage.</p></div>""", unsafe_allow_html=True)
     T = get_tuning(tuning_stamp())
     if T is not None:
         rf_tuned = summarize_cv(T["tuned_folds"]).loc["Random Forest", "ROC_AUC mean"]
-        tuning_result = (f"Random Forest CV ROC-AUC {fmt3(rf)} → {fmt3(rf_tuned)} after GridSearchCV; XGBoost's "
-                         "defaults were already near-optimal.")
+        tuning_result = tr("tuning_result", LANG, before=fmt3(rf), after=fmt3(rf_tuned))
     else:
-        tuning_result = "Run `python main.py` to produce the tuning results."
-    split = (A.y_train.mean(), A.y_test.mean())
-    details = [
-        ("Validated 10,000 customers × 13 columns: no missing values, no duplicates, binary target. Found the one "
-         "material issue: class imbalance.", f"Churn rate {A.base_rate:.1%}: accuracy alone is misleading."),
-        ("Dropped identifiers, one-hot encoded Geography and Gender, scaled numerics for the linear model, and put "
-         "everything inside a scikit-learn Pipeline after a stratified 80/20 split.",
-         f"Train churn {split[0]:.1%} vs test {split[1]:.1%}; preprocessing learns from training rows only (no leakage)."),
-        ("Established reference points: an interpretable linear model and a bagging ensemble of deep trees.",
-         f"CV ROC-AUC: Logistic Regression {fmt3(lr)}, Random Forest {fmt3(rf)}. Non-linear patterns matter."),
-        ("Added three gradient-boosting implementations that build shallow trees sequentially, each correcting "
-         "the errors of the last.", "CV ROC-AUC: " + ", ".join(f"{m} {fmt3(cv.loc[m, 'ROC_AUC mean'])}" for m in boosters)
-         + ". The boosters are practically tied at the top."),
-        ("Searched hyperparameter grids with GridSearchCV on the training folds only, and compared before vs after "
-         "on cross-validation and on the untouched test set.", tuning_result),
-        ("Selected the model on cross-validation, chose a decision threshold from out-of-fold predictions, and "
-         "exposed everything in an interactive scoring tool. Tuned pipelines are saved for reuse.",
-         f"{best} at threshold {fmt3(tuned.threshold)} catches {tuned.metrics['Recall']:.0%} of test churners. "
-         "Ready for exploration and teaching; not validated for production banking decisions."),
-    ]
-    did, found = details[current]
+        tuning_result = tr("tuning_missing", LANG)
+    values = dict(base=f"{A.base_rate:.1%}", train=f"{A.y_train.mean():.1%}", test=f"{A.y_test.mean():.1%}",
+                  lr=fmt3(lr), rf=fmt3(rf), tuning=tuning_result, best=best, t=fmt3(tuned.threshold),
+                  recall=f"{tuned.metrics['Recall']:.0%}",
+                  boosters=", ".join(f"{m} {fmt3(cv.loc[m, 'ROC_AUC mean'])}" for m in boosters))
+    did, found = tr("stage_details", LANG)[current]
     with st.container(border=True):
         c1, c2, c3 = st.columns([5, 5, 2], gap="medium", vertical_alignment="center")
-        c1.markdown(f"**{JOURNEY[current][1]} Step {current + 1} · {stage}: what we did**\n\n{did}")
-        c2.markdown(f"**What we measured**\n\n{found}")
-        target = PAGES[JOURNEY[current][2]]
-        c3.button(f"Open Section {target.split('.')[0]} →", key=f"journey_go_{current}", on_click=_go_to,
-                  args=(target,), type="primary", width="stretch", help=f"Go to: {target}")
+        c1.markdown(f"**{JOURNEY[current][0]} {tr('step', LANG)} {current + 1} · {stage}: "
+                    f"{tr('what_we_did_stage', LANG)}**\n\n{did}")
+        c2.markdown(f"**{tr('what_we_measured', LANG)}**\n\n{found.format(**values)}")
+        target = JOURNEY[current][1]
+        c3.button(tr("open_section", LANG, n=target), key=f"journey_go_{current}", on_click=_go_to,
+                  args=(target,), type="primary", width="stretch", help=tr("go_to", LANG, t=PAGE_LABELS[target]))
 
-    st.info("**How to read this dashboard.** Use the sidebar to move between sections and to change the class "
-            "weighting and decision threshold; every chart updates live. Hover any metric or column header for a "
-            "definition, and open **Key terms** panels or the sidebar **Glossary** for more.", icon="🧭")
+    st.info(tr("how_to_read_dashboard", LANG), icon="🧭")
 
 # =============================================================================
 # 1. Project overview & data inspection
@@ -550,7 +544,7 @@ def page_overview() -> None:
     k = st.columns(4)
     k[0].metric("Customers", f"{len(df):,}", help="Rows in churn_modelling.csv, one per customer", border=True)
     k[1].metric("Columns", f"{df.shape[1]}", help="10 model features, 2 identifiers, 1 target", border=True)
-    k[2].metric("Churn rate", f"{churn_rate:.2%}", help="Share of customers with Exited = 1. " + define("Class imbalance"),
+    k[2].metric("Churn rate", f"{churn_rate:.2%}", help="Share of customers with Exited = 1. " + D("Class imbalance"),
                 border=True)
     k[3].metric("Model features", f"{len(config.FEATURES)}",
                 help=f"{len(config.NUMERIC_FEATURES)} numeric, {len(config.CATEGORICAL_FEATURES)} categorical", border=True)
@@ -819,7 +813,8 @@ digraph G {{
 # 3. Model explorer & comparison
 # =============================================================================
 def page_models() -> None:
-    page_header(3, f"{len(A.models)} models, the same {len(A.y_test):,} held-out test customers, and the configuration selected in the sidebar.")
+    page_header(3, f"{len(A.models)} models, the same {len(A.y_test):,} held-out test customers, and the configuration selected in the sidebar.",
+                n_models=len(A.models), n_test=f"{len(A.y_test):,}")
     st.markdown(CONFIG_LINE)
     what_why_how(
         "Scored each fitted pipeline on the untouched test set and converted probabilities to decisions with "
@@ -1017,10 +1012,10 @@ def page_tuning() -> None:
         k[2 * i].metric(f"{name} · CV ROC-AUC", fmt3(row.loc["CV mean", "Tuned"]),
                         delta=f"{fmt3_signed(row.loc['CV mean', 'Change'])} vs baseline", border=True,
                         help=f"Mean over {config.CV_FOLDS} training folds. Baseline {fmt3(row.loc['CV mean', 'Baseline'])}. "
-                             + define("Selection bias (tuning)"))
+                             + D("Selection bias (tuning)"))
         k[2 * i + 1].metric(f"{name} · Test ROC-AUC", fmt3(row.loc["Test", "Tuned"]),
                             delta=f"{fmt3_signed(row.loc['Test', 'Change'])} vs baseline", border=True,
-                            help=f"Untouched test set. Baseline {fmt3(row.loc['Test', 'Baseline'])}. " + define("ROC_AUC"))
+                            help=f"Untouched test set. Baseline {fmt3(row.loc['Test', 'Baseline'])}. " + D("ROC_AUC"))
 
     best = cv_c["ROC_AUC mean"].idxmax()
     st.markdown(f'<div class="verdict best"><h3>Best model overall: {best}</h3><p>'
@@ -1050,7 +1045,7 @@ def page_tuning() -> None:
         table = data.assign(Metric=data["Metric"].str.replace("_", "-")).drop(columns="Stage")
         st.dataframe(table.style.format({"Baseline": fmt3, "Tuned": fmt3, "Change": fmt3_signed}), hide_index=True,
                      width="stretch", column_config={
-                         "Baseline": st.column_config.Column(help=define("Baseline")),
+                         "Baseline": st.column_config.Column(help=D("Baseline")),
                          "Tuned": st.column_config.Column(help="The GridSearchCV winner, refitted on all training data."),
                          "Change": st.column_config.Column(help="Tuned − Baseline. Positive = better.")})
 
@@ -1069,12 +1064,12 @@ def page_tuning() -> None:
 
     with t2:
         params = T["params"].copy()
-        params["Meaning"] = params["Hyperparameter"].map(HYPERPARAMETERS)
+        params["Meaning"] = params["Hyperparameter"].map(HP)
         params["Changed"] = params["Changed"].map({True: "✅ changed", False: "kept baseline"})
         st.dataframe(params, hide_index=True, width="stretch", column_config={
-            "Hyperparameter": st.column_config.Column(help=define("Hyperparameter")),
+            "Hyperparameter": st.column_config.Column(help=D("Hyperparameter")),
             "Values searched": st.column_config.Column(help="Every combination of these values was tried (a grid)."),
-            "Baseline": st.column_config.Column(help=define("Baseline")),
+            "Baseline": st.column_config.Column(help=D("Baseline")),
             "Tuned": st.column_config.Column(help="Value in the candidate with the highest mean CV ROC-AUC."),
             "Meaning": st.column_config.Column(width="large"),
         })
@@ -1120,7 +1115,7 @@ def page_tuning() -> None:
     with t4:
         metric = st.segmented_control("Metric", CV_METRICS, default="ROC_AUC", key="tune_metric",
                                       help="Compare all baseline and tuned models on one metric.") or "ROC_AUC"
-        st.caption(f"**{metric.replace('_', '-')}:** {define(metric)}")
+        st.caption(f"**{metric.replace('_', '-')}:** {D(metric)}")
         names = list(cv_c.index)
         base_of = {n: n.replace(" (tuned)", "") for n in names}
         fig = go.Figure()
@@ -1143,7 +1138,7 @@ def page_tuning() -> None:
         for m in ["Precision", "Recall", "F1", "ROC_AUC"]:
             merged[f"Test {m.replace('_', '-')}"] = test_c[m].map(fmt3)
         st.dataframe(merged, width="stretch", column_config={
-            c: st.column_config.Column(help=METRIC_HELP[c.split(" ")[1].replace("-", "_")]) for c in merged.columns})
+            c: st.column_config.Column(help=MH[c.split(" ")[1].replace("-", "_")]) for c in merged.columns})
 
         st.markdown("**ROC curves on the test set: baseline (dashed) vs tuned (solid)**")
         fig = go.Figure()
@@ -1195,8 +1190,9 @@ def page_tuning() -> None:
 # 5. Cross-validation & robustness
 # =============================================================================
 def page_cv() -> None:
-    page_header(5, f"{config.CV_FOLDS}-fold stratified cross-validation on the training set: how good, and how stable, is each model?")
-    st.markdown(f"Configuration: weighting **{weighting_label.split(' (')[0]}** (CV scores use the default 0.5 threshold).")
+    page_header(5, f"{config.CV_FOLDS}-fold stratified cross-validation on the training set: how good, and how stable, is each model?",
+                folds=config.CV_FOLDS)
+    st.markdown(f"Configuration: weighting **{WEIGHT_SHORT}** (CV scores use the default 0.5 threshold).")
     what_why_how(
         f"Split the {len(A.y_train):,} training customers into {config.CV_FOLDS} stratified folds. For each fold, a "
         "fresh pipeline (preprocessing + model) was fitted on the other folds and scored on the held-out one.",
@@ -1236,7 +1232,7 @@ def page_cv() -> None:
 
     metric = st.segmented_control("Metric", CV_METRICS, default="ROC_AUC", key="cv_metric",
                                   help="Choose the metric for the charts and tables below.") or "ROC_AUC"
-    st.caption(f"**{metric.replace('_', '-')}:** {define(metric)}")
+    st.caption(f"**{metric.replace('_', '-')}:** {D(metric)}")
     fig = go.Figure()
     for name, folds in A.cv_folds.items():
         fig.add_box(y=folds[metric], name=name, marker_color=MODEL_COLORS[name], boxpoints="all", jitter=0.3,
@@ -1283,8 +1279,8 @@ def page_cv() -> None:
         width="stretch",
         column_config={
             "Train": st.column_config.Column(help="Final model scored on its own training data."),
-            "CV mean": st.column_config.Column(help=define("Mean ± std")),
-            "Train − CV": st.column_config.Column(help=define("Generalisation gap")),
+            "CV mean": st.column_config.Column(help=D("Mean ± std")),
+            "Train − CV": st.column_config.Column(help=D("Generalisation gap")),
             "Test − CV": st.column_config.Column(help="How far the test score is from the CV estimate."),
             within_col: st.column_config.Column(help="Is the test score within the usual fold-to-fold variation?"),
         },
@@ -1588,16 +1584,16 @@ def page_methodology() -> None:
         names = list(A.models)
         model_name = st.selectbox("Model", names, index=names.index(best_model(A.cv_summary())), key="meth_model")
         tuned = A.tuned_thresholds[model_name]
-        t = st.slider("Threshold", 0.05, 0.95, float(round(tuned, 2)), 0.01, key="meth_t", help=define("Threshold"))
+        t = st.slider("Threshold", 0.05, 0.95, float(round(tuned, 2)), 0.01, key="meth_t", help=D("Threshold"))
         oof = A.oof_scores[model_name]
         pred = apply_threshold(oof, t)
         tp = int(((pred == 1) & (A.y_train == 1)).sum())
         fp = int(((pred == 1) & (A.y_train == 0)).sum())
         fn = int(((pred == 0) & (A.y_train == 1)).sum())
         prec, rec = tp / max(tp + fp, 1), tp / max(tp + fn, 1)
-        st.metric("CV Precision", fmt3(prec), help=define("Precision"))
-        st.metric("CV Recall", fmt3(rec), help=define("Recall"))
-        st.metric("CV F1", fmt3(2 * prec * rec / (prec + rec) if prec + rec else 0), help=define("F1"))
+        st.metric("CV Precision", fmt3(prec), help=D("Precision"))
+        st.metric("CV Recall", fmt3(rec), help=D("Recall"))
+        st.metric("CV F1", fmt3(2 * prec * rec / (prec + rec) if prec + rec else 0), help=D("F1"))
     with c2:
         curve = threshold_curve(A.y_train, oof)
         fig = go.Figure()
@@ -1647,18 +1643,18 @@ def page_methodology() -> None:
     st.caption("Regenerate with `python -m churn.animation`. Synthetic data, for illustration only.")
 
     st.subheader("Model hyperparameters (documented baselines)")
-    rows = [{"Model": "Logistic Regression", "Hyperparameter": "C", "Value": "1.0", "Meaning": HYPERPARAMETERS["C"]}]
+    rows = [{"Model": "Logistic Regression", "Hyperparameter": "C", "Value": "1.0", "Meaning": HP["C"]}]
     for model, settings in [("Logistic Regression", LOGISTIC_PARAMS), ("Random Forest", FOREST_PARAMS),
                             ("XGBoost", XGBOOST_PARAMS), ("LightGBM", LIGHTGBM_PARAMS), ("CatBoost", CATBOOST_PARAMS)]:
         for k, v in settings.items():
-            if k in HYPERPARAMETERS:
-                rows.append({"Model": model, "Hyperparameter": k, "Value": str(v), "Meaning": HYPERPARAMETERS[k]})
+            if k in HP:
+                rows.append({"Model": model, "Hyperparameter": k, "Value": str(v), "Meaning": HP[k]})
     params = pd.DataFrame(rows)
     chosen = st.multiselect("Show models", list(MODEL_COLORS), default=list(MODEL_COLORS), key="meth_params",
                             help="Filter the table. Section 4 shows the values selected by GridSearchCV.")
     st.dataframe(params[params["Model"].isin(chosen)], hide_index=True, width="stretch",
                  column_config={"Meaning": st.column_config.Column(width="large"),
-                                "Hyperparameter": st.column_config.Column(help=define("Hyperparameter"))})
+                                "Hyperparameter": st.column_config.Column(help=D("Hyperparameter"))})
     st.caption("Technical settings without a modelling effect (n_jobs, thread_count, verbose, file output) are omitted.")
 
     st.subheader("Architecture: designed for extension")
@@ -1716,33 +1712,28 @@ threshold = select_f1_threshold(y_train, oof_scores)        # or select_cost_thr
 
 
 @st.cache_data(show_spinner="Preparing the game with real test-set customers…")
-def story_game_html(class_weight: str | None, weighting: str, assets_version: str) -> str:
+def story_game_html(class_weight: str | None, weighting: str, assets_version: str, lang: str = "en") -> str:
     """The self-contained HTML/JS game, with this configuration's real model scores baked in.
 
     assets_version (a hash of game.html and engine.js) is only part of the cache key: editing the game's
     files invalidates the cached page.
     """
     a = get_analysis(class_weight)
-    payload = build_payload(a, best=best_model(a.cv_summary()), colors=MODEL_COLORS, weighting=weighting)
+    payload = build_payload(a, best=best_model(a.cv_summary()), colors=MODEL_COLORS, weighting=weighting, lang=lang)
     return render_html(payload)
 
 
 def page_story_game() -> None:
     page_header(9, "Run retention at a commercial bank for five weeks. Every click is a decision; every outcome is real.")
-    st.caption(
-        "Everything below is interactive and runs instantly in your browser. Customers are real held-out test "
-        "customers (fictional names), scored live by every model, and their outcomes are real. Customer values, "
-        "incentive costs and success rates are game assumptions. "
-        f"Current sidebar weighting: **{weighting_label.split(' (')[0]}**."
-    )
+    st.caption(tr("game_caption", LANG, w=WEIGHT_SHORT))
     # st.iframe replaces the deprecated st.components.v1.html. The HTML is generated by this project
     # (never user input), as st.iframe requires for HTML with JavaScript.
     # height="content": the iframe grows and shrinks with the game (e.g. one card per row on phones), so there
     # is never a second scrollbar inside the page.
-    html = story_game_html(class_weight, weighting_label.split(" (")[0], assets_fingerprint())
+    html = story_game_html(class_weight, WEIGHT_SHORT, assets_fingerprint(), LANG)
     st.iframe(html, height="content")
-    with st.expander("How the game works, and what is real"):
-        st.markdown(
+    with st.expander(tr("game_how", LANG)):
+        st.markdown(GAME_HOW_HE if LANG == "he" else 
             "- **Story:** four short chapters introduce churn risk probability, the decision threshold, and the "
             "Precision/Recall trade-off, using this project's own numbers.\n"
             "- **Each week:** five persona cards (David, Sarah, Michael, Emma, Lukas). Each is a real test customer "
@@ -1760,6 +1751,23 @@ def page_story_game() -> None:
         )
 
 
+GAME_HOW_HE = (
+    "- **סיפור:** ארבעה פרקים קצרים מציגים את הסתברות סיכון הנטישה, את סף ההחלטה ואת האיזון בין Precision "
+    "ל-Recall, על בסיס המספרים של הפרויקט הזה.\n"
+    "- **בכל שבוע:** חמישה כרטיסי לקוחות (דוד, שרה, מיכאל, אמה ולוקאס). כל אחד הוא לקוח בדיקה אמיתי שנבחר "
+    "אקראית מתוך ארכיטיפ (בזרע קבוע לכל שבוע, אף פעם לא לפי ציון או תוצאה). לחצו על כרטיס כדי לשוחח; תנו "
+    "תמריצים בכפתורים; בועות הדיבור, תגי הסיכון ומוני הכסף מגיבים מיד.\n"
+    "- **מחליף מודלים:** החליפו בין Logistic Regression, Random Forest, XGBoost, LightGBM ו-CatBoost בזמן "
+    "אמת: ציוני הסיכון, הסימונים ולוח \"בקנה מידה\" מתעדכנים.\n"
+    "- **סף:** לקוחות עם סיכון ≥ הסף מסומנים. \"פנו לכל המסומנים\" נותן להם תמריץ אחד; לוח \"בקנה מידה\" "
+    "מציג את ה-Precision, ה-Recall, הבזבוז והערך הנקי האמיתיים של הכלל על כל 2,000 לקוחות הבדיקה.\n"
+    "- **חשיפה ותחקיר:** תוצאות אמיתיות, חיסכון אמיתי, תקציב מבוזבז, הכנסות שאבדו, ROI, ציון הצלחה 0–100 מול "
+    "ידיעה בדיעבד, התוכנית של כל מודל, ולקחים שנוצרים אוטומטית.\n"
+    "- **מנוע:** לוגיקת הכסף והניקוד נמצאת ב-`churn/game_assets/engine.js`; חבילת הבדיקות מריצה אותו ב-Node "
+    "ומשווה אותו למימוש הייחוס בפייתון ב-`churn/game.py`."
+)
+
+
 # --- Router ------------------------------------------------------------------------
 ROUTES = [page_briefing, page_overview, page_pipeline, page_models, page_tuning, page_cv, page_importance, page_predict, page_methodology, page_story_game]
-ROUTES[PAGES.index(page)]()
+ROUTES[PAGE_IDX]()

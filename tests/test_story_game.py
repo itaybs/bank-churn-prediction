@@ -166,3 +166,64 @@ def test_assets_fingerprint_tracks_the_game_files():
     fp = assets_fingerprint()
     assert len(fp) == 16 and fp == assets_fingerprint()
     assert all(c in "0123456789abcdef" for c in fp)
+
+
+@pytest.fixture(scope="module")
+def payload_he(analysis):
+    return build_payload(analysis, best="CatBoost", colors=COLORS, lang="he")
+
+
+def test_hebrew_payload_changes_text_not_numbers(payload, payload_he):
+    assert payload["lang"] == "en" and payload_he["lang"] == "he"
+    for rnd_en, rnd_he in zip(payload["rounds"], payload_he["rounds"]):
+        for c_en, c_he in zip(rnd_en["customers"], rnd_he["customers"]):
+            assert c_en["p"] == c_he["p"] and c_en["churned"] == c_he["churned"] and c_en["value"] == c_he["value"]
+            assert c_en["name"] != c_he["name"] and c_he["lines"]["idle"] != c_en["lines"]["idle"]
+    assert payload["scale"] == payload_he["scale"]
+    assert [i["cost"] for i in payload["econ"]["incentives"]] == [i["cost"] for i in payload_he["econ"]["incentives"]]
+    assert payload_he["econ"]["incentives"][0]["name"] == "שיחה אישית"
+
+
+@needs_node
+def test_rendered_hebrew_scripts_parse(payload_he, tmp_path):
+    html = render_html(payload_he)
+    assert "/*__I18N__*/" not in html and '"lang": "he"' in html
+    for k, script in enumerate(re.findall(r"<script>(.*?)</script>", html, re.S)):
+        path = tmp_path / f"he{k}.js"
+        path.write_text(script, encoding="utf-8")
+        run = subprocess.run([NODE, "--check", str(path)], capture_output=True, text=True)
+        assert run.returncode == 0, run.stderr
+
+
+@needs_node
+def test_game_text_is_complete_in_both_languages():
+    """Every interface string exists in English and Hebrew, and every text function renders in both."""
+    i18n = (ASSETS / "i18n.js").read_text(encoding="utf-8")
+    script = i18n + r"""
+const I = module.exports, out = { missing: [], extra: [], errors: [] };
+const en = Object.keys(I.en).sort(), he = Object.keys(I.he).sort();
+out.missing = en.filter((k) => !(k in I.he)); out.extra = he.filter((k) => !(k in I.en));
+const ctx = { base: "20.4%", budget: "$10,000", weeks: 5, nModels: 5, modelList: "A <b>0.8</b>", best: "CatBoost",
+  bestAuc: "0.866", lrAuc: "0.763", opt: "28%", n: "2,000", r50: "50%", p50: "82%", rOpt: "70%", pOpt: "58%",
+  thresholdBar: "", incentives: [{ icon: "📞", name: "x", cost: "$500", success: "25%", blurb: "b" }] };
+const c = { age: 40, products: 2, active: true, tenure: 3 };
+for (const lang of ["en", "he"]) {
+  for (const [k, v] of Object.entries(I[lang])) {
+    try {
+      let r = typeof v === "function" ? (k === "chapters" ? v(ctx) : k === "facts" ? v(c, "France", "$1") :
+              k === "list" ? v(["a", "b"]) : v("A", "B", "C", "D", "E", "F")) : v;
+      const flat = JSON.stringify(r);
+      if (!flat || flat.includes("undefined")) out.errors.push(lang + ":" + k);
+    } catch (e) { out.errors.push(lang + ":" + k + ":" + e.message); }
+  }
+  if (I[lang].chapters(ctx).length !== 4 || I[lang].takeaways.length !== 5) out.errors.push(lang + ":counts");
+}
+out.badges = Object.keys(I.he.badges).sort();
+console.log(JSON.stringify(out));"""
+    run = subprocess.run([NODE, "-e", script], capture_output=True, text=True, encoding="utf-8")
+    assert run.returncode == 0, run.stderr
+    out = json.loads(run.stdout)
+    assert out["missing"] == [] and out["extra"] == [], out
+    assert out["errors"] == [], out["errors"]
+    titles = {b[2] for b in [*__import__("churn.game", fromlist=["BADGES"]).BADGES]} | {"Budget Burner"}
+    assert set(out["badges"]) == titles  # every engine badge has a Hebrew title and message

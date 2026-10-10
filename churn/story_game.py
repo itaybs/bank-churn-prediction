@@ -30,6 +30,80 @@ INCENTIVE_META = {  # Economics key -> (id, icon, short name, blurb)
     "💳 Fee waiver": ("waiver", "💳", "Fee waiver", "Twelve months of account fees waived."),
     "👑 VIP package": ("vip", "👑", "VIP package", "Premium rates, a dedicated advisor and lounge access."),
 }
+INCENTIVE_META_HE = {  # id -> (short name, blurb)
+    "call": ("שיחה אישית", "מנהל/ת קשרי לקוחות מתקשר/ת כדי להקשיב ולפתור בעיות."),
+    "waiver": ("ויתור על עמלות", "שנים-עשר חודשים ללא עמלות ניהול חשבון."),
+    "vip": ("חבילת VIP", "ריביות מועדפות, יועץ/ת אישי/ת וגישה לטרקלין."),
+}
+
+# Persona text in Hebrew. Each persona's own first-person lines use their grammatical gender
+# (David, Michael and Lukas: masculine; Sarah and Emma: feminine).
+PERSONA_HE = {
+    "david": ("דוד", "בעל עסק, לקוח בעל ערך גבוה",
+              "מנהל חברה צומחת ושומר יתרה גבוהה בבנק. עסוק מאוד, כמעט לא משתמש באפליקציה."),
+    "sarah": ("שרה", "הסטודנטית המנותקת", "פתחה חשבון באוניברסיטה. לא התחברה כבר חודשים."),
+    "michael": ("מיכאל", "המשקיע הוותיק", "בפנסיה, עם חסכונות משמעותיים. מעריך שירות אישי ויציבות."),
+    "emma": ("אמה", "לקוחה משפחתית ותיקה", "לקוחה פעילה וותיקה עם שני מוצרים: חשבון עובר ושב ותוכנית חיסכון."),
+    "lukas": ("לוקאס", "הלקוח עמוס המוצרים", "קיבל שלושה מוצרים או יותר בגרמניה. מתחיל לתהות על העמלות."),
+}
+
+PERSONA_LINES_HE = {
+    "david": {
+        "idle": "אני מנהל חברה. בקצרה, בבקשה.",
+        "click": "חשבונות העסק שלי כאן. בינתיים.",
+        "call": "שיחה מהבנק? בסדר, חמש דקות.",
+        "waiver": "פחות עמלות על חשבונות העסק... זו התחלה.",
+        "vip": "ככה מתייחסים ללקוח עסקי.",
+        "stay_targeted": "תודה על ההטבות, אבל לא התכוונתי לזוז לשום מקום.",
+        "stay": "עסקים כרגיל. אני נשאר.",
+        "left_targeted": "עמדתי להעביר את החשבונות. ההצעה שלכם גרמה לי לחשוב שוב.",
+        "left": "העברתי את העסק למתחרה. אף אחד לא התקשר.",
+    },
+    "sarah": {
+        "idle": "אני בכלל עוד משתמשת בחשבון הזה?",
+        "click": "פתחתי אותו באוניברסיטה. לא נכנסתי כבר המון זמן.",
+        "call": "מישהו באמת התקשר אליי? זה... נחמד.",
+        "waiver": "בלי עמלות? אוקיי, אולי אשאיר אותו.",
+        "vip": "VIP? בשבילי? אני סטודנטית...",
+        "stay_targeted": "הטבות זה נחמד, אבל ממילא לא התכוונתי לטרוח ולעבור.",
+        "stay": "כנראה פשוט אשאיר אותו פתוח. סגירה זה יותר מדי טרחה.",
+        "left_targeted": "עמדתי לעבור לבנק דיגיטלי. תפסתם את תשומת הלב שלי.",
+        "left": "עברתי לבנק שכולו אפליקציה. אפילו לא שמתם לב שהלכתי.",
+    },
+    "michael": {
+        "idle": "בגילי, אני מצפה לשירות טוב.",
+        "click": "אני מעריך יציבות. ובן אדם אמיתי על הקו.",
+        "call": "סוף סוף, אדם אמיתי. תודה שהתקשרתם.",
+        "waiver": "חיסכון בעמלות תמיד מתקבל בברכה בגילי.",
+        "vip": "יועץ אישי? עכשיו אפשר לדבר על תיק ההשקעות שלי.",
+        "stay_targeted": "נחמד מצדכם, אבל הייתי מרוצה לגמרי גם ככה.",
+        "stay": "אני נשאר במקום. אני לא אוהב שינויים.",
+        "left_targeted": "האחיין שלי רצה שאעביר את החסכונות. שיניתם את דעתי.",
+        "left": "העברתי את החסכונות למקום אחר. נראה שלאף אחד לא היה אכפת.",
+    },
+    "emma": {
+        "idle": "שני ילדים, שני חשבונות, אפס זמן פנוי.",
+        "click": "אנחנו אתכם כבר שנים. הכול בסדר.",
+        "call": "יש בעיה בחשבון שלי?",
+        "waiver": "פחות עמלות זה יותר כסף לילדים. תודה!",
+        "vip": "זה נדיב. לא ציפיתי לשום דבר.",
+        "stay_targeted": "מחווה מקסימה, אבל ממילא התכוונו להישאר.",
+        "stay": "טוב לנו כאן. אין סיבה לעבור.",
+        "left_targeted": "בדקנו משכנתא בבנק אחר. בואו נדבר.",
+        "left": "לקחנו את המשכנתא ואת החסכונות לבנק אחר.",
+    },
+    "lukas": {
+        "idle": "למה אני משלם על שלושה מוצרים?",
+        "click": "היועץ שלכם מכר לי מוצרים שאני לא משתמש בהם.",
+        "call": "יופי, יש לי רשימת תלונות מוכנה.",
+        "waiver": "ויתור על העמלות זה המינימום.",
+        "vip": "יחס של VIP? סוף סוף לוקחים אותי ברצינות.",
+        "stay_targeted": "בסדר, אני נשאר. רק רטנתי.",
+        "stay": "עדיין מעצבן, אבל אני לא עוזב.",
+        "left_targeted": "טפסי הסגירה כבר היו מלאים. נראה אם תעמדו בהבטחות.",
+        "left": "סגרתי את שלושת המוצרים. הייתם צריכים להקשיב קודם.",
+    },
+}
 
 PERSONA_LINES = {
     "david": {
@@ -90,16 +164,18 @@ PERSONA_LINES = {
 }
 
 
-def _round_customers(analysis, econ: Economics, round_no: int) -> list[dict]:
+def _round_customers(analysis, econ: Economics, round_no: int, lang: str = "en") -> list[dict]:
     P = select_personas(analysis.X_test, round_no)
     positions = [analysis.X_test.index.get_loc(i) for i in P.index]
     values = econ.customer_value(P).to_numpy()
     churned = analysis.y_test.loc[P.index].to_numpy().astype(bool)
     customers = []
     for k, (persona, (_, row)) in enumerate(zip(PERSONAS, P.iterrows())):
+        name, title, story = PERSONA_HE[persona.key] if lang == "he" else (persona.name, persona.title, persona.story)
+        lines = (PERSONA_LINES_HE if lang == "he" else PERSONA_LINES)[persona.key]
         customers.append({
-            "key": persona.key, "name": persona.name, "avatar": persona.avatar, "title": persona.title,
-            "story": persona.story, "lines": PERSONA_LINES[persona.key],
+            "key": persona.key, "name": name, "avatar": persona.avatar, "title": title,
+            "story": story, "lines": lines,
             "age": int(row["Age"]), "geo": str(row["Geography"]), "balance": float(row["Balance"]),
             "products": int(row["NumOfProducts"]), "active": bool(row["IsActiveMember"]), "tenure": int(row["Tenure"]),
             "value": float(values[k]), "churned": bool(churned[k]),
@@ -127,12 +203,20 @@ def scale_grid(scores, churned, values, extra: tuple = ()) -> dict:
 
 
 def build_payload(analysis, best: str, colors: dict, econ: Economics | None = None, budget: float = 10_000,
-                  n_rounds: int = N_ROUNDS, weighting: str = "None") -> dict:
+                  n_rounds: int = N_ROUNDS, weighting: str = "None", lang: str = "en") -> dict:
+    """The game's data. lang ("en" or "he") selects the persona and incentive text; numbers never change."""
     econ = econ or Economics()
     cv = analysis.cv_summary()
     values = econ.customer_value(analysis.X_test).to_numpy()
     churned = analysis.y_test.to_numpy().astype(bool)
+    def incentive(key, inc):
+        inc_id, icon, name, blurb = INCENTIVE_META[key]
+        if lang == "he":
+            name, blurb = INCENTIVE_META_HE[inc_id]
+        return {"id": inc_id, "icon": icon, "name": name, "blurb": blurb, "cost": inc.cost, "success": inc.success}
+
     return {
+        "lang": lang,
         "best": best,
         "weighting": weighting,
         "budget": budget,
@@ -145,13 +229,9 @@ def build_payload(analysis, best: str, colors: dict, econ: Economics | None = No
         ],
         "econ": {
             "base": econ.base_value, "per_product": econ.per_product, "share": econ.balance_share,
-            "incentives": [
-                {"id": INCENTIVE_META[k][0], "icon": INCENTIVE_META[k][1], "name": INCENTIVE_META[k][2],
-                 "blurb": INCENTIVE_META[k][3], "cost": inc.cost, "success": inc.success}
-                for k, inc in econ.incentives.items()
-            ],
+            "incentives": [incentive(k, inc) for k, inc in econ.incentives.items()],
         },
-        "rounds": [{"no": r, "customers": _round_customers(analysis, econ, r)} for r in range(1, n_rounds + 1)],
+        "rounds": [{"no": r, "customers": _round_customers(analysis, econ, r, lang)} for r in range(1, n_rounds + 1)],
         "scale": {
             "n": int(len(churned)), "churners": int(churned.sum()),
             "models": {name: scale_grid(analysis.test_scores[name], churned, values, (analysis.tuned_thresholds[name],))
@@ -162,18 +242,20 @@ def build_payload(analysis, best: str, colors: dict, econ: Economics | None = No
 
 
 def assets_fingerprint() -> str:
-    """Changes whenever game.html or engine.js changes: part of the dashboard's cache key, so edits show up."""
+    """Changes whenever a game file changes: part of the dashboard's cache key, so edits show up."""
     import hashlib
 
     digest = hashlib.sha256()
-    for name in ("game.html", "engine.js"):
+    for name in ("game.html", "engine.js", "i18n.js"):
         digest.update((ASSETS / name).read_bytes())
     return digest.hexdigest()[:16]
 
 
 def render_html(payload: dict) -> str:
-    """The self-contained game page: template + engine + JSON payload (no external requests)."""
+    """The self-contained game page: template + engine + interface text + JSON payload (no external requests)."""
     template = (ASSETS / "game.html").read_text(encoding="utf-8")
     engine = (ASSETS / "engine.js").read_text(encoding="utf-8")
+    i18n = (ASSETS / "i18n.js").read_text(encoding="utf-8")
     data = json.dumps(payload, ensure_ascii=False).replace("</", "<\\/")  # safe inside <script>
-    return template.replace("/*__ENGINE__*/", engine).replace("/*__PAYLOAD__*/null", data)
+    return (template.replace("/*__ENGINE__*/", engine).replace("/*__I18N__*/", i18n)
+            .replace("/*__PAYLOAD__*/null", data))
