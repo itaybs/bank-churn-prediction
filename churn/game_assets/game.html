@@ -13,14 +13,17 @@
   --radius: 18px;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
+html, body { margin: 0; padding: 0; max-width: 100%; }
+img, svg, canvas { max-width: 100%; }
+#app { width: 100%; max-width: 1480px; margin: 0 auto; }
+.board > *, .hud > *, .controls > *, .lower > *, .two > *, .kpis > *, .compare > *, .chapter-grid > *, .scale-grid > * { min-width: 0; }
 body {
   font-family: Inter, "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: var(--text);
   background: radial-gradient(1200px 600px at 10% -10%, rgba(90,169,255,0.25), transparent 60%),
               radial-gradient(900px 500px at 110% 10%, rgba(166,139,255,0.28), transparent 60%),
               radial-gradient(800px 600px at 50% 120%, rgba(61,220,151,0.16), transparent 60%),
               linear-gradient(160deg, var(--bg1), var(--bg2) 55%, var(--bg3));
-  min-height: 100vh; padding: 18px; font-size: 15px; line-height: 1.45;
+  padding: 18px; font-size: 15px; line-height: 1.45; overflow-wrap: anywhere;
 }
 button { font-family: inherit; }
 .glass { background: var(--glass); border: 1px solid var(--stroke); border-radius: var(--radius);
@@ -148,9 +151,9 @@ select option { color: #0b1020; }
 .reveal-wrap { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 16px; }
 
 /* ---------- debrief ---------- */
-.overlay { position: fixed; inset: 0; background: rgba(5,8,18,.72); backdrop-filter: blur(6px); display: none; align-items: flex-start; justify-content: center; padding: 26px 18px; overflow-y: auto; z-index: 10; }
-.overlay.show { display: flex; animation: fadeIn .35s ease both; }
-.debrief { max-width: 1000px; width: 100%; padding: 24px 26px; }
+.overlay { display: none; margin-top: 14px; scroll-margin-top: 12px; }
+.overlay.show { display: block; animation: fadeIn .35s ease both; }
+.debrief { width: 100%; padding: 24px 26px; border-color: rgba(166,139,255,.45); box-shadow: 0 0 0 1px rgba(166,139,255,.25), 0 20px 60px rgba(0,0,0,.45); }
 .verdict { display: flex; gap: 18px; align-items: center; }
 .ring { width: 104px; height: 104px; flex: none; }
 .ring circle { fill: none; stroke-width: 10; }
@@ -170,8 +173,48 @@ select option { color: #0b1020; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .foot { font-size: 12px; color: var(--faint); margin-top: 14px; }
 
-@media (max-width: 1100px) { .board { grid-template-columns: repeat(3, minmax(0,1fr)); } .hud { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 760px) { .board, .controls, .lower, .chapter-grid, .two, .kpis { grid-template-columns: 1fr; } .hud { grid-template-columns: repeat(2, 1fr); } }
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hud { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .controls, .lower { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  body { padding: 12px; }
+  .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chapter-grid, .two { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .intro { padding: 22px 20px; }
+  h1 { font-size: 25px; }
+  .verdict { flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+  body { padding: 8px; font-size: 14px; }
+  .scale-grid { grid-template-columns: 1fr; }
+  .hud { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .hud .v { font-size: 19px; }
+  .hud .cell { padding: 10px 11px; }
+  .hud .cell:last-child { grid-column: 1 / -1; }
+  .compare { grid-template-columns: 1fr; }
+  .intro { padding: 16px 14px; }
+  h1 { font-size: 22px; } h2 { font-size: 18px; }
+  .lead { font-size: 15px; }
+  .chip { min-width: 0; flex: 1 1 140px; }
+  .row .btn, .row select { flex: 1 1 140px; }
+  .nav { flex-wrap: wrap; gap: 10px; }
+  .nav > div { display: flex; gap: 8px; flex-wrap: wrap; }
+  .debrief { padding: 16px 14px; }
+  .ring { width: 84px; height: 84px; }
+  .mbar { grid-template-columns: 1fr auto; row-gap: 4px; }
+  .mbar .mtrack { grid-column: 1 / -1; grid-row: 2; }
+  .act { padding: 9px 0; }  /* bigger touch targets */
+}
+@media (max-width: 480px) { .board { grid-template-columns: 1fr; } }
+@media (max-width: 380px) {
+  .kpis { grid-template-columns: 1fr; }
+  .hud .v { font-size: 17px; }
+}
+@media (hover: none) { .card:hover, .btn:hover:not(:disabled) { transform: none; } }
 </style>
 </head>
 <body>
@@ -244,6 +287,9 @@ select option { color: #0b1020; }
       <div class="hint" id="revealHint">Click a card to talk to the customer, then pick an incentive with the buttons.</div>
     </div>
   </div>
+
+  <!-- Debrief: shown inline below the board, so it works at any screen size and iframe height. -->
+  <div class="overlay" id="overlay" aria-live="polite"><div class="debrief glass" id="debrief"></div></div>
 </section>
 
 <!-- ======================= FINAL ======================= -->
@@ -251,8 +297,7 @@ select option { color: #0b1020; }
   <div class="intro glass" id="finalBody"></div>
 </section>
 
-<!-- ======================= DEBRIEF ======================= -->
-<div class="overlay" id="overlay"><div class="debrief glass" id="debrief"></div></div>
+
 <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3ddc97"/><stop offset="1" stop-color="#5aa9ff"/></linearGradient></defs></svg>
 </div>
 
@@ -345,7 +390,14 @@ function renderStory() {
   $("prevCh").disabled = chapter === 0;
   $("nextCh").textContent = chapter === chs.length - 1 ? "Start week 1 →" : "Next →";
 }
-function show(id) { document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === id)); window.scrollTo(0, 0); }
+function bringIntoView(el) {
+  // The dashboard sizes the iframe to its content, so the scrolling happens in the parent page.
+  try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) { el.scrollIntoView(); }
+}
+function show(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === id));
+  bringIntoView($(id));
+}
 $("prevCh").onclick = () => { chapter = Math.max(0, chapter - 1); renderStory(); };
 $("nextCh").onclick = () => { if (chapter < 3) { chapter++; renderStory(); } else { show("game"); } };
 $("skipIntro").onclick = () => show("game");
@@ -455,7 +507,7 @@ function updateHud() {
     const exp = state.decisions.reduce((s, d, i) => s + probs()[i] * E.incentiveById(econ, d).success * values()[i], 0);
     $("hudSaveK").textContent = "Model-expected savings"; $("hudSaveS").textContent = `if ${state.model}'s risks are right`;
     tick($("hudSave"), exp, (v) => money(v));
-    $("hudRoiK").textContent = "Expected ROI";
+    $("hudRoiK").textContent = "Expected ROI"; $("hudRoiS").textContent = "(savings − spend) / spend";
     const roi = spent ? (exp - spent) / spent : null;
     $("hudRoi").textContent = roi === null ? "–" : (roi >= 0 ? "+" : "") + pct(roi);
     $("hudRoi").className = "v " + (roi === null ? "" : roi >= 0 ? "good" : "bad");
@@ -603,12 +655,16 @@ function openDebrief(entry, icon, title, message) {
       <button class="btn primary big" id="nextWeek">${last ? "🏁 See your final report" : "Next week →"}</button>
     </div>`;
   $("overlay").classList.add("show");
+  bringIntoView($("overlay"));
   requestAnimationFrame(() => requestAnimationFrame(() => {
     $("ringFg").style.strokeDashoffset = C * (1 - entry.score / 100);
     document.querySelectorAll(".mfill").forEach((f) => (f.style.width = f.dataset.w + "%"));
   }));
-  $("closeDeb").onclick = () => $("overlay").classList.remove("show");
-  $("nextWeek").onclick = () => { $("overlay").classList.remove("show"); last ? finalReport() : startWeek(state.week + 1); };
+  $("closeDeb").onclick = () => { $("overlay").classList.remove("show"); bringIntoView($("board")); };
+  $("nextWeek").onclick = () => {
+    $("overlay").classList.remove("show");
+    if (last) finalReport(); else { startWeek(state.week + 1); bringIntoView($("game")); }
+  };
 }
 function finalReport() {
   const H = state.history, net = H.reduce((s, h) => s + h.you.net, 0), avg = Math.round(H.reduce((s, h) => s + h.score, 0) / H.length);

@@ -161,6 +161,16 @@ def build_payload(analysis, best: str, colors: dict, econ: Economics | None = No
     }
 
 
+def assets_fingerprint() -> str:
+    """Changes whenever game.html or engine.js changes: part of the dashboard's cache key, so edits show up."""
+    import hashlib
+
+    digest = hashlib.sha256()
+    for name in ("game.html", "engine.js"):
+        digest.update((ASSETS / name).read_bytes())
+    return digest.hexdigest()[:16]
+
+
 def render_html(payload: dict) -> str:
     """The self-contained game page: template + engine + JSON payload (no external requests)."""
     template = (ASSETS / "game.html").read_text(encoding="utf-8")

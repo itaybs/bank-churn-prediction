@@ -65,7 +65,7 @@ python -m venv .venv
 pip install -r requirements.txt
 
 python main.py                 # full workflow -> outputs/ (~8-10 min, mostly GridSearchCV)
-python -m pytest               # 93 automated tests (~8 min including the dashboard tests)
+python -m pytest               # 96 automated tests (~8 min including the dashboard tests)
 streamlit run app.py --server.address=localhost --server.port=8501
 ```
 
@@ -82,6 +82,14 @@ Then open **http://localhost:8501/**. The same address and port are set in `.str
 ## 3. Dashboard tour
 
 An English Streamlit dashboard (`app.py`) with ten sections. **Every metric column, control and KPI has a hover tooltip**, every section has a *Key terms* panel, and the sidebar holds a full glossary (`churn/glossary.py`).
+
+**Mobile-friendly.** The dashboard and the story game adapt to phones, tablets and desktops:
+- the sidebar collapses automatically on small screens;
+- custom panels use CSS media queries;
+- the game's board reflows from 3 card columns to 2 to 1;
+- the game's iframe grows to fit its content, so there is no scroll-in-scroll on touch screens.
+
+Every section was audited in headless Chrome at 360, 390, 768, 1024 and 1440 px, with no horizontal overflow.
 
 | # | Section | What you will find |
 |---|---|---|
@@ -126,7 +134,7 @@ An English Streamlit dashboard (`app.py`) with ten sections. **Every metric colu
 **How it is built.**
 - **Data:** `churn/story_game.py` builds a JSON payload from the analysis (customers, five models' probabilities, CV thresholds, and confusion counts at every threshold).
 - **Page:** it injects the payload into `churn/game_assets/game.html`, which has no external requests.
-- **Embedding:** the dashboard embeds the page with `st.iframe`, the current replacement for the deprecated `st.components.v1.html`.
+- **Embedding:** the dashboard embeds the page with `st.iframe(..., height="content")`, the current replacement for the deprecated `st.components.v1.html`. The iframe sizes itself to the game. The page is responsive (breakpoints at 1180, 860, 560 and 480 px), and its debrief opens inline so it works at any height. The cached page is keyed on a hash of the game files, so edits always show up.
 - **Money logic:** all money and scoring logic lives in `churn/game_assets/engine.js` as pure functions. `tests/test_story_game.py` runs it under Node and compares outcomes, plans, scores, badges and at-scale statistics with the Python reference engine and with direct test-set computations.
 
 ### Screenshots
@@ -381,7 +389,7 @@ churn_modelling/
 python -m pytest
 ```
 
-The suite (93 tests) covers:
+The suite (96 tests) covers:
 
 - **Data:** validation errors for missing files or columns, a non-binary target and missing values; stratification; the absence of identifiers and the target from `X`.
 - **Leakage:** scalers learn training statistics only; CV never fits the pipeline passed in.

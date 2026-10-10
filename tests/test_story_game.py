@@ -148,3 +148,21 @@ def test_js_scale_stats_match_real_test_counts(payload, analysis):
     assert s["precision"] == pytest.approx((flagged & y).sum() / flagged.sum())
     values = Economics().customer_value(analysis.X_test).to_numpy()
     assert s["net"] == pytest.approx(waiver["success"] * values[flagged & y].sum() - waiver["cost"] * flagged.sum(), abs=0.05)
+
+
+def test_game_page_is_responsive(payload):
+    """Mobile-friendly by construction: viewport meta, phone/tablet breakpoints, no fixed overlay."""
+    html = render_html(payload)
+    assert '<meta name="viewport" content="width=device-width, initial-scale=1">' in html
+    for breakpoint in ("max-width: 1180px", "max-width: 860px", "max-width: 560px", "max-width: 480px"):
+        assert f"@media ({breakpoint})" in html
+    assert "position: fixed" not in html  # the debrief opens inline, so it works with an auto-height iframe
+    assert "max-width: 100%" in html and "minmax(0, 1fr)" in html
+
+
+def test_assets_fingerprint_tracks_the_game_files():
+    from churn.story_game import assets_fingerprint
+
+    fp = assets_fingerprint()
+    assert len(fp) == 16 and fp == assets_fingerprint()
+    assert all(c in "0123456789abcdef" for c in fp)

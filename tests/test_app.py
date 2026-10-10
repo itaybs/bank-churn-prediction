@@ -123,3 +123,9 @@ def test_story_game_page_embeds_the_interactive_game(app):
     html = frames[0].proto.srcdoc
     assert "The Chief Retention Officer" in html and "const DATA = {" in html and "Engine" in html
     assert '"best": "CatBoost"' in html
+    assert "@media (max-width: 480px)" in html  # the embedded page is the current, responsive version
+
+
+def test_dashboard_css_has_mobile_breakpoints(app):
+    css = next(m.value for m in app.markdown if "<style>" in m.value)
+    assert "@media (max-width: 640px)" in css and "@media (max-width: 900px)" in css
